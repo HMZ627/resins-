@@ -10,7 +10,7 @@ import os
 # Configuration & Global Styling (Working Animated Gradient + Glassmorphism)
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="𝐑𝐞𝐬𝐢𝐧𝐬 𝐛𝐲 𝓡",
+    page_title="𝐑𝐞𝐬𝐢𝐧𝐬 𝐛𝐲 𝐑",
     page_icon="💍",
     layout="wide"
 )
@@ -271,7 +271,7 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
-st.title("𝐑𝐞𝐬𝐢𝐧𝐬 𝐛𝐲 𝓡")
+st.title("𝐑𝐞𝐬𝐢𝐧𝐬 𝐛𝐲 𝐑")
 st.write("Browse products and place orders instantly.")
 
 # Sidebar Filters & Developer Info
