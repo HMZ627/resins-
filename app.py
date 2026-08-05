@@ -7,7 +7,7 @@ import base64
 import os
 
 # -----------------------------------------------------------------------------
-# Configuration & Global Styling (Glassmorphism & Gradients)
+# Configuration & Global Styling (Animated Gradient & Glassmorphism)
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="Resins Store Catalog",
@@ -15,12 +15,34 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom Magenta-Maroon Gradient + Glassmorphism UI
+# Custom CSS with Animated Top-Left to Bottom-Right Gradient
 st.markdown("""
 <style>
-    /* Main Background Gradient */
+    /* Animated Gradient Keyframes */
+    @keyframes gradientAnimation {
+        0% {
+            background-position: 0% 0%;
+        }
+        50% {
+            background-position: 100% 100%;
+        }
+        100% {
+            background-position: 0% 0%;
+        }
+    }
+
+    /* Main Animated Background Gradient */
     .stApp {
-        background: linear-gradient(135deg, #2b021d 0%, #4a001e 40%, #800020 70%, #1a000d 100%) !important;
+        background: linear-gradient(
+            135deg, 
+            #2b021d 0%, 
+            #5a0022 25%, 
+            #800020 50%, 
+            #4a001e 75%, 
+            #1a000d 100%
+        ) !important;
+        background-size: 300% 300% !important;
+        animation: gradientAnimation 12s ease infinite !important;
         background-attachment: fixed !important;
         color: #ffffff !important;
     }
@@ -260,10 +282,8 @@ cols = st.columns(3)
 for idx, product in enumerate(filtered_products):
     col = cols[idx % 3]
     with col:
-        # Auto-sliding image carousel (4.5s loop interval)
         render_auto_sliding_carousel(product["images"], height=320, interval_sec=4.5)
             
-        # Product Details
         st.subheader(product["name"])
         st.write(f"**Category:** {product['category']}")
         st.write(product["description"])
@@ -287,7 +307,6 @@ if st.session_state.selected_product is not None:
         
         st.divider()
         
-        # Quantity & Price Calculations
         quantity = st.number_input(
             "Quantity", 
             min_value=1, 
@@ -316,7 +335,6 @@ if st.session_state.selected_product is not None:
 
         st.divider()
         
-        # Checkout Form
         with st.form("checkout_form"):
             transaction_id = ""
             if payment_method == "Online Payment":
@@ -365,7 +383,6 @@ if st.session_state.selected_product is not None:
                     else:
                         st.error(f"Failed to deliver order message to Telegram. Error: {result}")
 
-        # Contact Notice with Direct WhatsApp Link
         st.markdown(
             "💬 *For further order details, contact on "
             "[+92 305-8866692](https://wa.me/923058866692) through WhatsApp.*"
