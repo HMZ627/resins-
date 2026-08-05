@@ -7,8 +7,8 @@ import datetime
 # Configuration
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Store Catalog & Direct Orders",
-    page_icon="🛍️",
+    page_title="Resins Store Catalog",
+    page_icon="💍",
     layout="wide"
 )
 
@@ -16,31 +16,19 @@ st.set_page_config(
 TELEGRAM_BOT_TOKEN = "8644129117:AAG3CJ4xJVteiTmwuImnTQz5PXWFvhfqPLs"
 TELEGRAM_CHAT_ID = "6359572760"
 
-# Sample Product Inventory (Replace or expand with your actual products)
+# Product Inventory (Updated with multiple images for Resin Ring)
 PRODUCTS = [
     {
-        "id": 101,
-        "name": "Wireless Noise-Canceling Headphones",
-        "category": "Electronics",
-        "price": 89.99,
-        "image": "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500",
-        "description": "High-fidelity Bluetooth headphones with active noise cancellation."
-    },
-    {
-        "id": 102,
-        "name": "Smart Fitness Watch",
-        "category": "Electronics",
-        "price": 49.99,
-        "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500",
-        "description": "Track steps, heart rate, and sleep cycles with an AMOLED display."
-    },
-    {
-        "id": 103,
-        "name": "Minimalist Canvas Backpack",
-        "category": "Fashion",
-        "price": 34.50,
-        "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=500",
-        "description": "Durable water-resistant canvas backpack with a 15-inch laptop sleeve."
+        "id": 1,
+        "name": "Resin Ring",
+        "category": "Jewellery",
+        "price": 500,
+        "images": [
+            "images/SaveClip.App_753224950_17897573046550553_9171311841910070315_n.jpg.webp",
+            "images/SaveClip.App_729164572_17897573055550553_1935948774416209706_n.jpg.webp",
+            "images/SaveClip.App_753604692_17897573067550553_3868263303187958583_n.jpg.webp"
+        ],
+        "description": "A visualization of beauty and aesthetics, along with the modern requirements of today's jewellery fashion. Colours can be customised."
     }
 ]
 
@@ -61,12 +49,12 @@ def send_telegram_order(order_data):
         f"*Order No:* `{order_data['order_no']}`\n"
         f"*Product:* {order_data['product_name']}\n"
         f"*Quantity:* {order_data['quantity']}\n"
-        f"*Total Price:* ${order_data['total_price']:.2f}\n\n"
+        f"*Total Price:* PKR {order_data['total_price']:,}\n\n"
         f"👤 *CUSTOMER DETAILS*\n"
         f"*Name:* {order_data['customer_name']}\n"
         f"*Phone:* {order_data['customer_phone']}\n"
         f"*Address:* {order_data['customer_address']}\n"
-        f"*Notes:* {order_data['customer_notes'] or 'None'}\n"
+        f"*Customization/Notes:* {order_data['customer_notes'] or 'None'}\n"
         f"-------------------------------"
     )
     
@@ -83,10 +71,23 @@ def send_telegram_order(order_data):
     except Exception as e:
         return False, str(e)
 
+def render_image_gallery(image_list):
+    """Displays a list of images in a selectable tab slider sequence."""
+    if len(image_list) == 1:
+        st.image(image_list[0], use_container_width=True)
+    else:
+        tabs = st.tabs([f"View {i+1}" for i in range(len(image_list))])
+        for idx, tab in enumerate(tabs):
+            with tab:
+                try:
+                    st.image(image_list[idx], use_container_width=True)
+                except Exception:
+                    st.warning(f"Image could not be loaded: {image_list[idx]}")
+
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
-st.title("🛍️ Online Store Catalog")
+st.title("🛍️ Resins Store Catalog")
 st.write("Browse products and place orders instantly.")
 
 # Sidebar Filters
@@ -104,9 +105,12 @@ cols = st.columns(3)
 for idx, product in enumerate(filtered_products):
     col = cols[idx % 3]
     with col:
-        st.image(product["image"], use_container_width=True)
+        # Display image slider for product gallery
+        render_image_gallery(product["images"])
+            
         st.subheader(product["name"])
-        st.write(f"**Price:** ${product['price']:.2f}")
+        st.write(f"**Category:** {product['category']}")
+        st.write(f"**Price:** PKR {product['price']:,}/-")
         if st.button("Order Now", key=f"btn_{product['id']}"):
             st.session_state.selected_product = product
 
@@ -116,8 +120,9 @@ if st.session_state.selected_product is not None:
     
     @st.dialog(f"Order: {prod['name']}")
     def show_order_modal():
-        st.image(prod["image"], use_container_width=True)
-        st.write(f"**Price per item:** ${prod['price']:.2f}")
+        render_image_gallery(prod["images"])
+            
+        st.write(f"**Price per item:** PKR {prod['price']:,}/-")
         st.write(prod["description"])
         
         st.divider()
@@ -125,12 +130,12 @@ if st.session_state.selected_product is not None:
         with st.form("checkout_form"):
             quantity = st.number_input("Quantity", min_value=1, max_value=50, value=1)
             total_price = quantity * prod["price"]
-            st.info(f"Total Amount: **${total_price:.2f}**")
+            st.info(f"Total Amount: **PKR {total_price:,}/-**")
             
             customer_name = st.text_input("Full Name *")
             customer_phone = st.text_input("Phone Number *")
             customer_address = st.text_area("Delivery Address *")
-            customer_notes = st.text_area("Order Description / Special Notes (Optional)")
+            customer_notes = st.text_area("Color Customization / Special Instructions (Optional)")
             
             submitted = st.form_submit_button("Submit Order")
             
