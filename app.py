@@ -10,7 +10,7 @@ import os
 # Configuration & Global Styling (Working Animated Gradient + Glassmorphism)
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Resins Store Catalog",
+    page_title="𝐑𝐞𝐬𝐢𝐧𝐬 𝐛𝐲 𝓡",
     page_icon="💍",
     layout="wide"
 )
