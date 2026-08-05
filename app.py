@@ -122,9 +122,9 @@ st.markdown("""
 <div id="animated-bg"></div>
 """, unsafe_allow_html=True)
 
-# Your Verified Telegram Bot Credentials
+# Your Verified Telegram Bot Credentials & Recipient Chat IDs
 TELEGRAM_BOT_TOKEN = "8644129117:AAG3CJ4xJVteiTmwuImnTQz5PXWFvhfqPLs"
-TELEGRAM_CHAT_ID = "6359572760"
+TELEGRAM_CHAT_IDS = ["6359572760", "8675071152"]
 
 # Product Inventory
 PRODUCTS = [
@@ -152,21 +152,33 @@ def generate_order_number():
     return f"ORD-{timestamp}-{rand_id}"
 
 def send_telegram_message(message_text):
-    """Generic payload sender for orders, reviews, and client opinions."""
+    """Generic payload sender dispatching orders, reviews, and opinions to all configured Chat IDs."""
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": message_text,
-        "parse_mode": "Markdown"
-    }
-    try:
-        res = requests.post(url, json=payload, timeout=5)
-        return res.status_code == 200, res.text
-    except Exception as e:
-        return False, str(e)
+    all_success = True
+    error_messages = []
+
+    for chat_id in TELEGRAM_CHAT_IDS:
+        payload = {
+            "chat_id": chat_id,
+            "text": message_text,
+            "parse_mode": "Markdown"
+        }
+        try:
+            res = requests.post(url, json=payload, timeout=5)
+            if res.status_code != 200:
+                all_success = False
+                error_messages.append(f"Chat ID {chat_id}: {res.text}")
+        except Exception as e:
+            all_success = False
+            error_messages.append(f"Chat ID {chat_id}: {str(e)}")
+
+    if all_success:
+        return True, "Success"
+    else:
+        return False, " | ".join(error_messages)
 
 def send_telegram_order(order_data):
-    """Sends background order notifications directly to your Telegram chat."""
+    """Sends background order notifications directly to all specified Telegram recipient accounts."""
     payment_info = f"*Payment Method:* {order_data['payment_method']}"
     if order_data['payment_method'] == "Online Payment":
         payment_info += f"\n*Transaction ID / Reference:* `{order_data['transaction_id']}`"
@@ -288,7 +300,7 @@ categories = ["All"] + sorted(list(set(p["category"] for p in PRODUCTS)))
 selected_category = st.sidebar.selectbox("Select Category", categories)
 
 st.sidebar.divider()
-st.sidebar.caption(" **Web Developer:** 0314-4012872")
+st.sidebar.caption("**Web Developer:** 0314-4012872")
 
 filtered_products = PRODUCTS if selected_category == "All" else [p for p in PRODUCTS if p["category"] == selected_category]
 
