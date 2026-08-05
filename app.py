@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import requests
 import random
 import datetime
@@ -72,16 +71,33 @@ def send_telegram_order(order_data):
     except Exception as e:
         return False, str(e)
 
-def render_touch_slider(image_paths, height=350):
-    """Renders a touch-swipeable horizontal image slider card."""
-    img_tags = "".join([f'<div style="min-width: 100%; scroll-snap-align: start;"><img src="app/static/{img}" style="width: 100%; height: {height}px; object-fit: cover; border-radius: 8px;"></div>' for img in image_paths])
+def render_image_slider(product_id, image_paths):
+    """Renders a single image frame with Next/Previous slider buttons."""
+    key = f"img_idx_{product_id}"
+    if key not in st.session_state:
+        st.session_state[key] = 0
+
+    current_idx = st.session_state[key]
     
-    html_code = f"""
-    <div style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; border-radius: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
-        {img_tags}
-    </div>
-    """
-    components.html(html_code, height=height+10)
+    # Render Current Single Image
+    try:
+        st.image(image_paths[current_idx], use_container_width=True)
+    except Exception:
+        st.error(f"Image missing at path: {image_paths[current_idx]}")
+
+    # Render Slider Controls below image if multiple images exist
+    if len(image_paths) > 1:
+        c1, c2, c3 = st.columns([1, 2, 1])
+        with c1:
+            if st.button("⬅️ Prev", key=f"prev_{product_id}"):
+                st.session_state[key] = (current_idx - 1) % len(image_paths)
+                st.rerun()
+        with c2:
+            st.caption(f"<div style='text-align:center;'>Image {current_idx + 1} of {len(image_paths)}</div>", unsafe_allow_html=True)
+        with c3:
+            if st.button("Next ➡️", key=f"next_{product_id}"):
+                st.session_state[key] = (current_idx + 1) % len(image_paths)
+                st.rerun()
 
 # -----------------------------------------------------------------------------
 # Main User Interface
@@ -104,17 +120,14 @@ cols = st.columns(3)
 for idx, product in enumerate(filtered_products):
     col = cols[idx % 3]
     with col:
-        # 1. Touch-swipeable Image Slider
-        if len(product["images"]) > 1:
-            render_touch_slider(product["images"])
-        else:
-            st.image(product["images"][0], use_container_width=True)
+        # 1. Image Slider Frame
+        render_image_slider(product["id"], product["images"])
             
         # 2. Product Name & Category
         st.subheader(product["name"])
         st.write(f"**Category:** {product['category']}")
         
-        # 3. Product Description (Below Name & Category)
+        # 3. Product Description
         st.write(product["description"])
         
         # 4. Price & Order Button
@@ -128,10 +141,7 @@ if st.session_state.selected_product is not None:
     
     @st.dialog(f"Order: {prod['name']}")
     def show_order_modal():
-        if len(prod["images"]) > 1:
-            render_touch_slider(prod["images"], height=300)
-        else:
-            st.image(prod["images"][0], use_container_width=True)
+        render_image_slider(f"modal_{prod['id']}", prod["images"])
             
         st.subheader(prod["name"])
         st.write(f"**Category:** {prod['category']}")
