@@ -270,6 +270,76 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
     """
     components.html(carousel_html, height=height + 10)
 
+def render_interactive_star_rating():
+    """Renders 5 interactive empty stars supporting hover highlights and click selection."""
+    star_html = """
+    <div id="star-rating-wrapper" style="display: inline-flex; align-items: center; gap: 8px; font-family: sans-serif; user-select: none;">
+        <div id="stars-container" style="display: flex; direction: ltr; font-size: 32px; cursor: pointer; color: rgba(255, 255, 255, 0.3);">
+            <span class="star" data-value="1" style="position: relative; transition: color 0.2s;">☆</span>
+            <span class="star" data-value="2" style="position: relative; transition: color 0.2s;">☆</span>
+            <span class="star" data-value="3" style="position: relative; transition: color 0.2s;">☆</span>
+            <span class="star" data-value="4" style="position: relative; transition: color 0.2s;">☆</span>
+            <span class="star" data-value="5" style="position: relative; transition: color 0.2s;">☆</span>
+        </div>
+        <span id="rating-text" style="color: #ffca28; font-size: 18px; font-weight: 600; margin-left: 10px;">0.5 / 5.0</span>
+    </div>
+
+    <script>
+        const stars = document.querySelectorAll('.star');
+        const ratingText = document.getElementById('rating-text');
+        let selectedRating = 0.5;
+
+        function updateDisplay(rating) {
+            stars.forEach((star, idx) => {
+                const starVal = idx + 1;
+                if (rating >= starVal) {
+                    star.innerText = '★';
+                    star.style.color = '#ffca28';
+                } else if (rating === starVal - 0.5) {
+                    star.innerText = '★';
+                    star.style.color = '#ffca28';
+                    star.style.opacity = '0.6';
+                } else {
+                    star.innerText = '☆';
+                    star.style.color = 'rgba(255, 255, 255, 0.3)';
+                    star.style.opacity = '1';
+                }
+            });
+            ratingText.innerText = rating.toFixed(1) + ' / 5.0';
+        }
+
+        stars.forEach((star, idx) => {
+            star.addEventListener('mousemove', (e) => {
+                const rect = star.getBoundingClientRect();
+                const isHalf = (e.clientX - rect.left) < (rect.width / 2);
+                const hoverVal = isHalf ? (idx + 0.5) : (idx + 1);
+                updateDisplay(hoverVal);
+            });
+
+            star.addEventListener('click', (e) => {
+                const rect = star.getBoundingClientRect();
+                const isHalf = (e.clientX - rect.left) < (rect.width / 2);
+                selectedRating = isHalf ? (idx + 0.5) : (idx + 1);
+                updateDisplay(selectedRating);
+                
+                // Send rating back to Streamlit
+                window.parent.postMessage({
+                    type: 'streamlit:setComponentValue',
+                    value: selectedRating
+                }, '*');
+            });
+        });
+
+        document.getElementById('stars-container').addEventListener('mouseleave', () => {
+            updateDisplay(selectedRating);
+        });
+
+        // Initialize state
+        updateDisplay(selectedRating);
+    </script>
+    """
+    return components.html(star_html, height=50)
+
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
@@ -411,16 +481,15 @@ if st.session_state.selected_product is not None:
 # -----------------------------------------------------------------------------
 st.divider()
 
-# Section 1: Customer Review Box with 5-Star Rating (Minimum 0.5 stars)
-st.subheader("Leave a Review")
+# Section 1: Customer Review Box with Interactive 5-Star Rating
+st.subheader("⭐ Leave a Review")
+st.caption("Hover and click to set your star rating (Minimum 0.5 stars):")
+
+# Interactive Stars Component
+interactive_rating = render_interactive_star_rating()
+current_rating = interactive_rating if interactive_rating is not None else 0.5
+
 with st.form("client_review_form"):
-    star_rating = st.select_slider(
-        "Select your Rating (Minimum 0.5 star):",
-        options=[0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0],
-        value=5.0,
-        format_func=lambda x: f"{'★' * int(x)}{'½' if x % 1 != 0 else ''}{'☆' * (5 - int(x) - (1 if x % 1 != 0 else 0))} ({x}/5.0)"
-    )
-    
     review_text = st.text_area("How was your experience:", placeholder="Write your experience with Resins By R...")
     review_submitted = st.form_submit_button("Submit Review")
 
@@ -428,11 +497,17 @@ with st.form("client_review_form"):
         if not review_text.strip():
             st.error("Please fill in 'How was your experience:' before submitting.")
         else:
-            stars_visual = f"{'★' * int(star_rating)}{'½' if star_rating % 1 != 0 else ''}"
+            rating_val = float(current_rating)
+            full_stars = int(rating_val)
+            is_half = (rating_val % 1) != 0
+            empty_stars = 5 - full_stars - (1 if is_half else 0)
+            
+            stars_visual = f"{'★' * full_stars}{'½' if is_half else ''}{'☆' * empty_stars}"
+            
             telegram_msg = (
                 f"⭐ *NEW CLIENT REVIEW*\n"
                 f"-------------------------------\n"
-                f"*Rating:* {star_rating} / 5.0 ({stars_visual})\n"
+                f"*Rating:* {rating_val} / 5.0 ({stars_visual})\n"
                 f"*Experience:* {review_text.strip()}\n"
                 f"-------------------------------"
             )
