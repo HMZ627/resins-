@@ -46,6 +46,10 @@ def generate_order_number():
 
 def send_telegram_order(order_data):
     """Sends background order notifications directly to your Telegram chat."""
+    payment_info = f"*Payment Method:* {order_data['payment_method']}"
+    if order_data['payment_method'] == "Online Payment" and order_data.get('transaction_id'):
+        payment_info += f"\n*Transaction ID / Reference:* `{order_data['transaction_id']}`"
+
     message_text = (
         f"🛒 *NEW ORDER RECEIVED*\n"
         f"-------------------------------\n"
@@ -53,6 +57,8 @@ def send_telegram_order(order_data):
         f"*Product:* {order_data['product_name']}\n"
         f"*Quantity:* {order_data['quantity']}\n"
         f"*Total Price:* PKR {order_data['total_price']:,}\n\n"
+        f"💳 *PAYMENT INFO*\n"
+        f"{payment_info}\n\n"
         f"👤 *CUSTOMER DETAILS*\n"
         f"*Name:* {order_data['customer_name']}\n"
         f"*Phone:* {order_data['customer_phone']}\n"
@@ -168,7 +174,7 @@ if st.session_state.selected_product is not None:
         
         st.divider()
         
-        # 1. Quantity input outside form for instant rerun on change
+        # 1. Quantity Input (Live Total Update)
         quantity = st.number_input(
             "Quantity", 
             min_value=1, 
@@ -177,9 +183,30 @@ if st.session_state.selected_product is not None:
             key=f"qty_input_{prod['id']}"
         )
         
-        # 2. Calculate and display live total price instantly
+        # 2. Total Amount Badge
         total_price = quantity * prod["price"]
         st.info(f"Total Amount: **PKR {total_price:,}/-**")
+        
+        st.write("### Payment Method")
+        payment_method = st.radio(
+            "Select Payment Option *",
+            ["Online Payment", "COD (Cash on Delivery)"],
+            key=f"payment_radio_{prod['id']}"
+        )
+
+        transaction_id = ""
+        if payment_method == "Online Payment":
+            st.success(
+                "📱 **JazzCash Payment Details**\n\n"
+                "• **Account Number:** `0305-8866692`\n\n"
+                "• **Account Name:** Rimsha Fatima\n\n"
+                "Please send the total amount to the JazzCash account above and enter your transaction ID / reference number below."
+            )
+            transaction_id = st.text_input("Transaction ID / Reference Number (Optional)", key=f"trx_{prod['id']}")
+        else:
+            st.caption("💵 Pay with cash upon delivery of your order.")
+
+        st.divider()
         
         # 3. Customer Information Form
         with st.form("checkout_form"):
@@ -199,6 +226,8 @@ if st.session_state.selected_product is not None:
                         "product_name": prod["name"],
                         "quantity": quantity,
                         "total_price": total_price,
+                        "payment_method": payment_method,
+                        "transaction_id": transaction_id,
                         "customer_name": customer_name,
                         "customer_phone": customer_phone,
                         "customer_address": customer_address,
