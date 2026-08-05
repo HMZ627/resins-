@@ -10,7 +10,7 @@ import os
 # Configuration & Global Styling (Working Animated Gradient + Glassmorphism)
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="𝐑𝐞𝐬𝐢𝐧𝐬 𝐛𝐲 𝐑",
+    page_title="Resins Store Catalog",
     page_icon="💍",
     layout="wide"
 )
@@ -145,6 +145,20 @@ def generate_order_number():
     rand_id = random.randint(100, 999)
     return f"ORD-{timestamp}-{rand_id}"
 
+def send_telegram_message(message_text):
+    """Generic payload sender for orders, reviews, and client opinions."""
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": message_text,
+        "parse_mode": "Markdown"
+    }
+    try:
+        res = requests.post(url, json=payload, timeout=5)
+        return res.status_code == 200, res.text
+    except Exception as e:
+        return False, str(e)
+
 def send_telegram_order(order_data):
     """Sends background order notifications directly to your Telegram chat."""
     payment_info = f"*Payment Method:* {order_data['payment_method']}"
@@ -167,19 +181,7 @@ def send_telegram_order(order_data):
         f"*Customization/Notes:* {order_data['customer_notes'] or 'None'}\n"
         f"-------------------------------"
     )
-    
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": message_text,
-        "parse_mode": "Markdown"
-    }
-    
-    try:
-        res = requests.post(url, json=payload, timeout=5)
-        return res.status_code == 200, res.text
-    except Exception as e:
-        return False, str(e)
+    return send_telegram_message(message_text)
 
 def trigger_side_party_poppers():
     """Fires subtle party popper confetti from the screen sides."""
@@ -271,7 +273,7 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
-st.title("𝐑𝐞𝐬𝐢𝐧𝐬 𝐛𝐲 𝐑")
+st.title("🛍️ Resins Store Catalog")
 st.write("Browse products and place orders instantly.")
 
 # Sidebar Filters & Developer Info
@@ -403,6 +405,80 @@ if st.session_state.selected_product is not None:
             st.rerun()
 
     show_order_modal()
+
+# -----------------------------------------------------------------------------
+# Bottom Interactive Sections (Review & Brand Opinion Forms)
+# -----------------------------------------------------------------------------
+st.divider()
+
+# Section 1: Customer Review Box with 5-Star Rating (Minimum 0.5 stars)
+st.subheader("Leave a Review")
+with st.form("client_review_form"):
+    star_rating = st.select_slider(
+        "Select your Rating (Minimum 0.5 star):",
+        options=[0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0],
+        value=5.0,
+        format_func=lambda x: f"{'★' * int(x)}{'½' if x % 1 != 0 else ''}{'☆' * (5 - int(x) - (1 if x % 1 != 0 else 0))} ({x}/5.0)"
+    )
+    
+    review_text = st.text_area("How was your experience:", placeholder="Write your experience with Resins By R...")
+    review_submitted = st.form_submit_button("Submit Review")
+
+    if review_submitted:
+        if not review_text.strip():
+            st.error("Please fill in 'How was your experience:' before submitting.")
+        else:
+            stars_visual = f"{'★' * int(star_rating)}{'½' if star_rating % 1 != 0 else ''}"
+            telegram_msg = (
+                f"⭐ *NEW CLIENT REVIEW*\n"
+                f"-------------------------------\n"
+                f"*Rating:* {star_rating} / 5.0 ({stars_visual})\n"
+                f"*Experience:* {review_text.strip()}\n"
+                f"-------------------------------"
+            )
+            with st.spinner("Submitting review..."):
+                ok, err = send_telegram_message(telegram_msg)
+            if ok:
+                st.success("Thank you for submitting your review!")
+            else:
+                st.error(f"Could not submit review. Error: {err}")
+
+st.divider()
+
+# Section 2: Brand Description
+st.markdown(
+    '**"Resins by R"** is a brand worth to be trusted and attended, as it opts the '
+    '"quality over quantity" fact, making the clients to trust with all their heart. '
+    'We do NOT ignore the service demands of our clients, and ensure all the details '
+    'are kept in check, building the pure-trust relation with the clients, instead '
+    'of just developing a "Buyer-Seller" sense. We do all our best to keep the clients '
+    'satisfied and comfortable with our purchases.\n\n'
+    'But still, if you think we can serve you better than we are, your opinion is of '
+    'great importance for us.\n\n'
+    '*(Resins By R)\'s Development team.*'
+)
+
+# Section 3: Client Opinion Form
+with st.form("client_opinion_form"):
+    opinion_text = st.text_area("Your opinion:", placeholder="Share your suggestions or opinion with us...")
+    opinion_submitted = st.form_submit_button("Submit Opinion")
+
+    if opinion_submitted:
+        if not opinion_text.strip():
+            st.error("Please enter your opinion before submitting.")
+        else:
+            telegram_msg = (
+                f"💡 *NEW CLIENT OPINION*\n"
+                f"-------------------------------\n"
+                f"*Opinion:* {opinion_text.strip()}\n"
+                f"-------------------------------"
+            )
+            with st.spinner("Submitting opinion..."):
+                ok, err = send_telegram_message(telegram_msg)
+            if ok:
+                st.success("Thank you for sharing your valuable opinion with us!")
+            else:
+                st.error(f"Could not submit opinion. Error: {err}")
 
 # Footer Developer Information
 st.divider()
