@@ -110,6 +110,12 @@ st.markdown("""
         color: #ffffff !important;
         border-radius: 10px !important;
     }
+
+    /* Make Streamlit star icons larger and gold when active */
+    div[data-testid="stFeedback"] button {
+        transform: scale(1.3);
+        margin-right: 8px;
+    }
 </style>
 
 <!-- Injected HTML element behind app UI -->
@@ -282,7 +288,7 @@ categories = ["All"] + sorted(list(set(p["category"] for p in PRODUCTS)))
 selected_category = st.sidebar.selectbox("Select Category", categories)
 
 st.sidebar.divider()
-st.sidebar.caption("**Web Developer:** 0314-4012872")
+st.sidebar.caption(" **Web Developer:** 0314-4012872")
 
 filtered_products = PRODUCTS if selected_category == "All" else [p for p in PRODUCTS if p["category"] == selected_category]
 
@@ -414,46 +420,27 @@ st.divider()
 # Section 1: Customer Review Box with Interactive Star Selection
 st.subheader("⭐ Leave a Review")
 
-# Mapping star options to numeric values (supports half-stars down to 0.5)
-star_options = {
-    "½★☆☆☆☆ (0.5 Star)": 0.5,
-    "★☆☆☆☆ (1.0 Star)": 1.0,
-    "★½☆☆☆ (1.5 Stars)": 1.5,
-    "★★☆☆☆ (2.0 Stars)": 2.0,
-    "★★½☆☆ (2.5 Stars)": 2.5,
-    "★★★☆☆ (3.0 Stars)": 3.0,
-    "★★★½☆ (3.5 Stars)": 3.5,
-    "★★★★☆ (4.0 Stars)": 4.0,
-    "★★★★½ (4.5 Stars)": 4.5,
-    "★★★★★ (5.0 Stars)": 5.0,
-}
+# Streamlit native feedback component renders 5 interactive outlined stars (0 to 4 index)
+star_rating_index = st.feedback("stars")
 
 with st.form("client_review_form"):
-    selected_star_label = st.radio(
-        "Select your Star Rating (Minimum 0.5 star):",
-        options=list(star_options.keys()),
-        index=9,  # Default to 5 stars
-        horizontal=True
-    )
-    
     review_text = st.text_area("How was your experience:", placeholder="Write your experience with Resins By R...")
     review_submitted = st.form_submit_button("Submit Review")
 
     if review_submitted:
-        if not review_text.strip():
+        if star_rating_index is None:
+            st.error("Please click on the stars above to select a star rating!")
+        elif not review_text.strip():
             st.error("Please fill in 'How was your experience:' before submitting.")
         else:
-            rating_val = star_options[selected_star_label]
-            full_stars = int(rating_val)
-            is_half = (rating_val % 1) != 0
-            empty_stars = 5 - full_stars - (1 if is_half else 0)
-            
-            stars_visual = f"{'★' * full_stars}{'½' if is_half else ''}{'☆' * empty_stars}"
+            # st.feedback returns 0-indexed integers (0 = 1 star, 4 = 5 stars)
+            rating_val = star_rating_index + 1
+            stars_visual = f"{'★' * rating_val}{'☆' * (5 - rating_val)}"
             
             telegram_msg = (
                 f"⭐ *NEW CLIENT REVIEW*\n"
                 f"-------------------------------\n"
-                f"*Rating:* {rating_val} / 5.0 ({stars_visual})\n"
+                f"*Rating:* {rating_val} / 5 Stars ({stars_visual})\n"
                 f"*Experience:* {review_text.strip()}\n"
                 f"-------------------------------"
             )
