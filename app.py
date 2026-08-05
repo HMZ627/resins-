@@ -138,7 +138,7 @@ cols = st.columns(3)
 for idx, product in enumerate(filtered_products):
     col = cols[idx % 3]
     with col:
-        # 1. Touch-Swipe Carousel (No Buttons)
+        # 1. Touch Carousel
         render_touch_carousel(product["images"], height=320)
             
         # 2. Product Name & Category
@@ -168,11 +168,21 @@ if st.session_state.selected_product is not None:
         
         st.divider()
         
+        # 1. Quantity input outside form for instant rerun on change
+        quantity = st.number_input(
+            "Quantity", 
+            min_value=1, 
+            max_value=50, 
+            value=1, 
+            key=f"qty_input_{prod['id']}"
+        )
+        
+        # 2. Calculate and display live total price instantly
+        total_price = quantity * prod["price"]
+        st.info(f"Total Amount: **PKR {total_price:,}/-**")
+        
+        # 3. Customer Information Form
         with st.form("checkout_form"):
-            quantity = st.number_input("Quantity", min_value=1, max_value=50, value=1)
-            total_price = quantity * prod["price"]
-            st.info(f"Total Amount: **PKR {total_price:,}/-**")
-            
             customer_name = st.text_input("Full Name *")
             customer_phone = st.text_input("Phone Number *")
             customer_address = st.text_area("Delivery Address *")
