@@ -7,7 +7,7 @@ import base64
 import os
 
 # -----------------------------------------------------------------------------
-# Configuration & Global Styling (Animated Color Gradient + Glassmorphism)
+# Configuration & Global Styling (Working Animated Gradient + Glassmorphism)
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="Resins Store Catalog",
@@ -15,36 +15,42 @@ st.set_page_config(
     layout="wide"
 )
 
-# Animated Colors Moving Top-Left to Bottom-Right
+# Injected Fullscreen Animated Layer + Glassmorphism Styling
 st.markdown("""
 <style>
-    /* Keyframe animation driving color flow along top-left (0% 0%) to bottom-right (100% 100%) axis */
-    @keyframes colorFlowAnimation {
+    /* Animated Gradient Background Element */
+    #animated-bg {
+        position: fixed;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        z-index: -9999;
+        background: linear-gradient(
+            135deg, 
+            #1a000d 0%, 
+            #5a0022 20%, 
+            #990033 40%, 
+            #2b021d 60%, 
+            #800020 80%, 
+            #4a001e 100%
+        );
+        animation: diagonalMove 12s linear infinite alternate;
+    }
+
+    /* Keyframes animating actual CSS translation across the diagonal axis */
+    @keyframes diagonalMove {
         0% {
-            background-position: 0% 0%;
-        }
-        50% {
-            background-position: 100% 100%;
+            transform: translate(0, 0);
         }
         100% {
-            background-position: 0% 0%;
+            transform: translate(-25%, -25%);
         }
     }
 
-    /* Main Background Gradient with Animated Color Waves */
+    /* Transparent Streamlit Shell */
     .stApp {
-        background: linear-gradient(
-            135deg, 
-            #2b021d 0%, 
-            #6a0028 20%, 
-            #990033 40%, 
-            #4a001e 60%, 
-            #800020 80%, 
-            #1a000d 100%
-        ) !important;
-        background-size: 250% 250% !important;
-        animation: colorFlowAnimation 10s ease-in-out infinite !important;
-        background-attachment: fixed !important;
+        background: transparent !important;
         color: #ffffff !important;
     }
 
@@ -105,6 +111,9 @@ st.markdown("""
         border-radius: 10px !important;
     }
 </style>
+
+<!-- Injected HTML element behind app UI -->
+<div id="animated-bg"></div>
 """, unsafe_allow_html=True)
 
 # Your Verified Telegram Bot Credentials
