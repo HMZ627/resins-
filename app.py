@@ -7,7 +7,7 @@ import base64
 import os
 
 # -----------------------------------------------------------------------------
-# Configuration & Global Styling (Animated Gradient & Glassmorphism)
+# Configuration & Global Styling (Animated Color Gradient + Glassmorphism)
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="Resins Store Catalog",
@@ -15,11 +15,11 @@ st.set_page_config(
     layout="wide"
 )
 
-# Custom CSS with Animated Top-Left to Bottom-Right Gradient
+# Animated Colors Moving Top-Left to Bottom-Right
 st.markdown("""
 <style>
-    /* Animated Gradient Keyframes */
-    @keyframes gradientAnimation {
+    /* Keyframe animation driving color flow along top-left (0% 0%) to bottom-right (100% 100%) axis */
+    @keyframes colorFlowAnimation {
         0% {
             background-position: 0% 0%;
         }
@@ -31,18 +31,19 @@ st.markdown("""
         }
     }
 
-    /* Main Animated Background Gradient */
+    /* Main Background Gradient with Animated Color Waves */
     .stApp {
         background: linear-gradient(
             135deg, 
             #2b021d 0%, 
-            #5a0022 25%, 
-            #800020 50%, 
-            #4a001e 75%, 
+            #6a0028 20%, 
+            #990033 40%, 
+            #4a001e 60%, 
+            #800020 80%, 
             #1a000d 100%
         ) !important;
-        background-size: 300% 300% !important;
-        animation: gradientAnimation 12s ease infinite !important;
+        background-size: 250% 250% !important;
+        animation: colorFlowAnimation 10s ease-in-out infinite !important;
         background-attachment: fixed !important;
         color: #ffffff !important;
     }
@@ -396,4 +397,4 @@ if st.session_state.selected_product is not None:
 
 # Footer Developer Information
 st.divider()
-st.caption(" Web Developer: 0314-4012872")
+st.caption("Web Developer: 0314-4012872")
