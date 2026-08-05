@@ -7,13 +7,82 @@ import base64
 import os
 
 # -----------------------------------------------------------------------------
-# Configuration
+# Configuration & Global Styling (Glassmorphism & Gradients)
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="Resins Store Catalog",
     page_icon="💍",
     layout="wide"
 )
+
+# Custom Magenta-Maroon Gradient + Glassmorphism UI
+st.markdown("""
+<style>
+    /* Main Background Gradient */
+    .stApp {
+        background: linear-gradient(135deg, #2b021d 0%, #4a001e 40%, #800020 70%, #1a000d 100%) !important;
+        background-attachment: fixed !important;
+        color: #ffffff !important;
+    }
+
+    /* Glassmorphism Cards & Containers */
+    div[data-testid="stVerticalBlock"] > div[style*="flex"] {
+        background: rgba(255, 255, 255, 0.07) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-radius: 16px !important;
+        padding: 1rem !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+    }
+
+    /* Glassmorphism Buttons */
+    .stButton > button {
+        background: rgba(255, 255, 255, 0.12) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .stButton > button:hover {
+        background: rgba(255, 255, 255, 0.25) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4) !important;
+    }
+
+    /* Glassmorphism Sidebar */
+    section[data-testid="stSidebar"] {
+        background: rgba(30, 0, 15, 0.55) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+    }
+
+    /* Glassmorphism Dialog Modal */
+    div[role="dialog"] {
+        background: rgba(35, 2, 20, 0.85) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border-radius: 20px !important;
+        color: #ffffff !important;
+    }
+
+    /* Input Fields Customization */
+    .stTextInput > div > div > input, .stTextArea > div > div > textarea, .stSelectbox > div > div {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #ffffff !important;
+        border-radius: 10px !important;
+    }
+</style>
+""", unsafe_allow_html=True)
 
 # Your Verified Telegram Bot Credentials
 TELEGRAM_BOT_TOKEN = "8644129117:AAG3CJ4xJVteiTmwuImnTQz5PXWFvhfqPLs"
@@ -81,7 +150,7 @@ def send_telegram_order(order_data):
         return False, str(e)
 
 def trigger_side_party_poppers():
-    """Fires subtle party popper confetti from the screen sides instead of full balloons."""
+    """Fires subtle party popper confetti from the screen sides."""
     confetti_html = """
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
@@ -94,11 +163,9 @@ def trigger_side_party_poppers():
           }));
         }
 
-        // Left popper
         fire(0.25, { spread: 26, startVelocity: 55, origin: { x: 0, y: 0.8 } });
         fire(0.2, { spread: 60, origin: { x: 0, y: 0.8 } });
         
-        # Right popper
         fire(0.25, { spread: 26, startVelocity: 55, origin: { x: 1, y: 0.8 } });
         fire(0.2, { spread: 60, origin: { x: 1, y: 0.8 } });
     </script>
@@ -106,23 +173,23 @@ def trigger_side_party_poppers():
     components.html(confetti_html, height=0, width=0)
 
 def get_base64_image(image_path):
-    """Converts local image to base64 so it can render safely inside HTML components."""
+    """Converts local image to base64 so it renders safely inside HTML components."""
     if os.path.exists(image_path):
         with open(image_path, "rb") as img_file:
             encoded = base64.b64encode(img_file.read()).decode("utf-8")
             return f"data:image/webp;base64,{encoded}"
     return None
 
-def render_touch_carousel(image_paths, height=350):
-    """Renders a pure touch/swipe horizontal carousel without buttons."""
+def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
+    """Renders an automatic horizontal slider cycling photos every 4-5 seconds."""
     img_html_elements = []
     
-    for path in image_paths:
+    for idx, path in enumerate(image_paths):
         b64_str = get_base64_image(path)
         if b64_str:
             img_html_elements.append(
-                f'<div style="min-width: 100%; scroll-snap-align: start; flex-shrink: 0;">'
-                f'<img src="{b64_str}" style="width: 100%; height: {height}px; object-fit: cover; border-radius: 10px;">'
+                f'<div class="slide" style="min-width: 100%; width: 100%; flex-shrink: 0; scroll-snap-align: start;">'
+                f'<img src="{b64_str}" style="width: 100%; height: {height}px; object-fit: cover; border-radius: 12px;">'
                 f'</div>'
             )
 
@@ -130,21 +197,42 @@ def render_touch_carousel(image_paths, height=350):
         st.error("Images could not be loaded. Please verify files exist in the 'images/' folder.")
         return
 
+    unique_id = f"carousel_{random.randint(1000, 9999)}"
+    
     carousel_html = f"""
-    <div style="
+    <div id="{unique_id}_container" style="
         display: flex;
         overflow-x: auto;
         scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
         gap: 0px;
-        border-radius: 10px;
+        border-radius: 12px;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
     ">
         {''.join(img_html_elements)}
     </div>
     <style>
-        ::-webkit-scrollbar {{ display: none; }}
+        #{unique_id}_container::-webkit-scrollbar {{ display: none; }}
     </style>
+    <script>
+        (function() {{
+            const container = document.getElementById('{unique_id}_container');
+            const totalSlides = {len(img_html_elements)};
+            let currentIndex = 0;
+
+            if (totalSlides > 1) {{
+                setInterval(() => {{
+                    currentIndex = (currentIndex + 1) % totalSlides;
+                    const scrollAmount = container.clientWidth * currentIndex;
+                    container.scrollTo({{
+                        left: scrollAmount,
+                        behavior: 'smooth'
+                    }});
+                }}, {interval_sec * 1000});
+            }}
+        }})();
+    </script>
     """
     components.html(carousel_html, height=height + 10)
 
@@ -172,18 +260,15 @@ cols = st.columns(3)
 for idx, product in enumerate(filtered_products):
     col = cols[idx % 3]
     with col:
-        # 1. Touch Carousel
-        render_touch_carousel(product["images"], height=320)
+        # Auto-sliding image carousel (4.5s loop interval)
+        render_auto_sliding_carousel(product["images"], height=320, interval_sec=4.5)
             
-        # 2. Product Name & Category
+        # Product Details
         st.subheader(product["name"])
         st.write(f"**Category:** {product['category']}")
-        
-        # 3. Product Description
         st.write(product["description"])
-        
-        # 4. Price & Order Button
         st.write(f"**Price:** PKR {product['price']:,}/-")
+        
         if st.button("Order Now", key=f"btn_{product['id']}"):
             st.session_state.selected_product = product
 
@@ -193,7 +278,7 @@ if st.session_state.selected_product is not None:
     
     @st.dialog(f"Order: {prod['name']}")
     def show_order_modal():
-        render_touch_carousel(prod["images"], height=280)
+        render_auto_sliding_carousel(prod["images"], height=280, interval_sec=4)
             
         st.subheader(prod["name"])
         st.write(f"**Category:** {prod['category']}")
@@ -202,7 +287,7 @@ if st.session_state.selected_product is not None:
         
         st.divider()
         
-        # 1. Quantity Input (Live Total Update)
+        # Quantity & Price Calculations
         quantity = st.number_input(
             "Quantity", 
             min_value=1, 
@@ -211,7 +296,6 @@ if st.session_state.selected_product is not None:
             key=f"qty_input_{prod['id']}"
         )
         
-        # 2. Total Amount Badge
         total_price = quantity * prod["price"]
         st.info(f"Total Amount: **PKR {total_price:,}/-**")
         
@@ -224,7 +308,7 @@ if st.session_state.selected_product is not None:
 
         if payment_method == "Online Payment":
             st.success(
-                " **JazzCash Payment Details**\n\n"
+                "**JazzCash Payment Details**\n\n"
                 "• **Account Number:** `0305-8866692`\n\n"
                 "• **Account Name:** Rimsha Fatima\n\n"
                 "Please send the total amount to the JazzCash account above and enter your transaction ID (TID) below."
@@ -232,7 +316,7 @@ if st.session_state.selected_product is not None:
 
         st.divider()
         
-        # 3. Customer Information & Checkout Form
+        # Checkout Form
         with st.form("checkout_form"):
             transaction_id = ""
             if payment_method == "Online Payment":
@@ -246,7 +330,6 @@ if st.session_state.selected_product is not None:
             submitted = st.form_submit_button("Submit Order")
             
             if submitted:
-                # Validation rules
                 missing_fields = []
                 if not customer_name.strip():
                     missing_fields.append("Full Name")
@@ -282,7 +365,7 @@ if st.session_state.selected_product is not None:
                     else:
                         st.error(f"Failed to deliver order message to Telegram. Error: {result}")
 
-        # Contact Notice with Direct WhatsApp Link at the bottom
+        # Contact Notice with Direct WhatsApp Link
         st.markdown(
             "💬 *For further order details, contact on "
             "[+92 305-8866692](https://wa.me/923058866692) through WhatsApp.*"
@@ -296,4 +379,4 @@ if st.session_state.selected_product is not None:
 
 # Footer Developer Information
 st.divider()
-st.caption("Web Developer: 0314-4012872")
+st.caption(" Web Developer: 0314-4012872")
