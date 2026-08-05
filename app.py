@@ -1,7 +1,10 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import requests
 import random
 import datetime
+import base64
+import os
 
 # -----------------------------------------------------------------------------
 # Configuration
@@ -71,33 +74,48 @@ def send_telegram_order(order_data):
     except Exception as e:
         return False, str(e)
 
-def render_image_slider(product_id, image_paths):
-    """Renders a single image frame with Next/Previous slider buttons."""
-    key = f"img_idx_{product_id}"
-    if key not in st.session_state:
-        st.session_state[key] = 0
+def get_base64_image(image_path):
+    """Converts local image to base64 so it can render safely inside HTML components."""
+    if os.path.exists(image_path):
+        with open(image_path, "rb") as img_file:
+            encoded = base64.b64encode(img_file.read()).decode("utf-8")
+            return f"data:image/webp;base64,{encoded}"
+    return None
 
-    current_idx = st.session_state[key]
+def render_touch_carousel(image_paths, height=350):
+    """Renders a pure touch/swipe horizontal carousel without buttons."""
+    img_html_elements = []
     
-    # Render Current Single Image
-    try:
-        st.image(image_paths[current_idx], use_container_width=True)
-    except Exception:
-        st.error(f"Image missing at path: {image_paths[current_idx]}")
+    for path in image_paths:
+        b64_str = get_base64_image(path)
+        if b64_str:
+            img_html_elements.append(
+                f'<div style="min-width: 100%; scroll-snap-align: start; flex-shrink: 0;">'
+                f'<img src="{b64_str}" style="width: 100%; height: {height}px; object-fit: cover; border-radius: 10px;">'
+                f'</div>'
+            )
 
-    # Render Slider Controls below image if multiple images exist
-    if len(image_paths) > 1:
-        c1, c2, c3 = st.columns([1, 2, 1])
-        with c1:
-            if st.button("⬅️ Prev", key=f"prev_{product_id}"):
-                st.session_state[key] = (current_idx - 1) % len(image_paths)
-                st.rerun()
-        with c2:
-            st.caption(f"<div style='text-align:center;'>Image {current_idx + 1} of {len(image_paths)}</div>", unsafe_allow_html=True)
-        with c3:
-            if st.button("Next ➡️", key=f"next_{product_id}"):
-                st.session_state[key] = (current_idx + 1) % len(image_paths)
-                st.rerun()
+    if not img_html_elements:
+        st.error("Images could not be loaded. Please verify files exist in the 'images/' folder.")
+        return
+
+    carousel_html = f"""
+    <div style="
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        gap: 0px;
+        border-radius: 10px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    ">
+        {''.join(img_html_elements)}
+    </div>
+    <style>
+        ::-webkit-scrollbar {{ display: none; }}
+    </style>
+    """
+    components.html(carousel_html, height=height + 10)
 
 # -----------------------------------------------------------------------------
 # Main User Interface
@@ -120,8 +138,8 @@ cols = st.columns(3)
 for idx, product in enumerate(filtered_products):
     col = cols[idx % 3]
     with col:
-        # 1. Image Slider Frame
-        render_image_slider(product["id"], product["images"])
+        # 1. Touch-Swipe Carousel (No Buttons)
+        render_touch_carousel(product["images"], height=320)
             
         # 2. Product Name & Category
         st.subheader(product["name"])
@@ -141,7 +159,7 @@ if st.session_state.selected_product is not None:
     
     @st.dialog(f"Order: {prod['name']}")
     def show_order_modal():
-        render_image_slider(f"modal_{prod['id']}", prod["images"])
+        render_touch_carousel(prod["images"], height=280)
             
         st.subheader(prod["name"])
         st.write(f"**Category:** {prod['category']}")
