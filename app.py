@@ -16,19 +16,19 @@ st.set_page_config(
 TELEGRAM_BOT_TOKEN = "8644129117:AAG3CJ4xJVteiTmwuImnTQz5PXWFvhfqPLs"
 TELEGRAM_CHAT_ID = "6359572760"
 
-# Product Inventory (Updated with multiple images for Resin Ring)
+# Product Inventory
 PRODUCTS = [
     {
         "id": 1,
         "name": "Resin Ring",
         "category": "Jewellery",
+        "description": "A visualization of beauty and aesthetics, along with the modern requirements of today's jewellery fashion. Colours can be customised.",
         "price": 500,
         "images": [
             "images/SaveClip.App_753224950_17897573046550553_9171311841910070315_n.jpg.webp",
             "images/SaveClip.App_729164572_17897573055550553_1935948774416209706_n.jpg.webp",
             "images/SaveClip.App_753604692_17897573067550553_3868263303187958583_n.jpg.webp"
-        ],
-        "description": "A visualization of beauty and aesthetics, along with the modern requirements of today's jewellery fashion. Colours can be customised."
+        ]
     }
 ]
 
@@ -71,19 +71,6 @@ def send_telegram_order(order_data):
     except Exception as e:
         return False, str(e)
 
-def render_image_gallery(image_list):
-    """Displays a list of images in a selectable tab slider sequence."""
-    if len(image_list) == 1:
-        st.image(image_list[0], use_container_width=True)
-    else:
-        tabs = st.tabs([f"View {i+1}" for i in range(len(image_list))])
-        for idx, tab in enumerate(tabs):
-            with tab:
-                try:
-                    st.image(image_list[idx], use_container_width=True)
-                except Exception:
-                    st.warning(f"Image could not be loaded: {image_list[idx]}")
-
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
@@ -105,11 +92,17 @@ cols = st.columns(3)
 for idx, product in enumerate(filtered_products):
     col = cols[idx % 3]
     with col:
-        # Display image slider for product gallery
-        render_image_gallery(product["images"])
+        # 1. Product Images in single post view
+        st.image(product["images"], use_container_width=True)
             
+        # 2. Product Name & Category
         st.subheader(product["name"])
         st.write(f"**Category:** {product['category']}")
+        
+        # 3. Product Description (Below Name/Category)
+        st.write(product["description"])
+        
+        # 4. Price & Order Button
         st.write(f"**Price:** PKR {product['price']:,}/-")
         if st.button("Order Now", key=f"btn_{product['id']}"):
             st.session_state.selected_product = product
@@ -120,10 +113,13 @@ if st.session_state.selected_product is not None:
     
     @st.dialog(f"Order: {prod['name']}")
     def show_order_modal():
-        render_image_gallery(prod["images"])
+        # Display images in single scrollable sequence inside modal
+        st.image(prod["images"], use_container_width=True)
             
+        st.subheader(prod["name"])
+        st.write(f"**Category:** {prod['category']}")
+        st.write(f"**Description:** {prod['description']}")
         st.write(f"**Price per item:** PKR {prod['price']:,}/-")
-        st.write(prod["description"])
         
         st.divider()
         
