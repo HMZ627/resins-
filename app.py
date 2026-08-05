@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import requests
 import random
 import datetime
@@ -71,6 +72,17 @@ def send_telegram_order(order_data):
     except Exception as e:
         return False, str(e)
 
+def render_touch_slider(image_paths, height=350):
+    """Renders a touch-swipeable horizontal image slider card."""
+    img_tags = "".join([f'<div style="min-width: 100%; scroll-snap-align: start;"><img src="app/static/{img}" style="width: 100%; height: {height}px; object-fit: cover; border-radius: 8px;"></div>' for img in image_paths])
+    
+    html_code = f"""
+    <div style="display: flex; overflow-x: auto; scroll-snap-type: x mandatory; gap: 10px; border-radius: 8px; -webkit-overflow-scrolling: touch; scrollbar-width: none;">
+        {img_tags}
+    </div>
+    """
+    components.html(html_code, height=height+10)
+
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
@@ -92,14 +104,17 @@ cols = st.columns(3)
 for idx, product in enumerate(filtered_products):
     col = cols[idx % 3]
     with col:
-        # 1. Product Images in single post view
-        st.image(product["images"], use_container_width=True)
+        # 1. Touch-swipeable Image Slider
+        if len(product["images"]) > 1:
+            render_touch_slider(product["images"])
+        else:
+            st.image(product["images"][0], use_container_width=True)
             
         # 2. Product Name & Category
         st.subheader(product["name"])
         st.write(f"**Category:** {product['category']}")
         
-        # 3. Product Description (Below Name/Category)
+        # 3. Product Description (Below Name & Category)
         st.write(product["description"])
         
         # 4. Price & Order Button
@@ -113,8 +128,10 @@ if st.session_state.selected_product is not None:
     
     @st.dialog(f"Order: {prod['name']}")
     def show_order_modal():
-        # Display images in single scrollable sequence inside modal
-        st.image(prod["images"], use_container_width=True)
+        if len(prod["images"]) > 1:
+            render_touch_slider(prod["images"], height=300)
+        else:
+            st.image(prod["images"][0], use_container_width=True)
             
         st.subheader(prod["name"])
         st.write(f"**Category:** {prod['category']}")
