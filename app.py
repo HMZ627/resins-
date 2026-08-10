@@ -249,6 +249,17 @@ PRODUCTS = [
             "images/SaveClip.App_729164572_17897573055550553_1935948774416209706_n.jpg.webp",
             "images/SaveClip.App_753604692_17897573067550553_3868263303187958583_n.jpg.webp"
         ]
+    },
+    {
+        "id": 2,
+        "name": "Black Marble & Gold Dust Resin Clock (Handmade)",
+        "category": "Home Decor",
+        "description": "Made with love, using the best quality resins and materials, by (ResinsbyR), the handcrafted masterpiece of ours, brings royalty and an attractive look to your wall, enhancing the overall outlook of the room.",
+        "price": 5000,
+        "images": [
+            "images/clock1.jpg",
+            "images/clock2.jpg"
+        ]
     }
 ]
 
