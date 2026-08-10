@@ -257,8 +257,8 @@ PRODUCTS = [
         "description": "Made with love, using the best quality resins and materials, by (ResinsbyR), the handcrafted masterpiece of ours, brings royalty and an attractive look to your wall, enhancing the overall outlook of the room.",
         "price": 5000,
         "images": [
-            "images/IMG-20260808-WA0078.jpg",
-            "images/IMG-20260808-WA0077.jpg"
+            "images/IMG-20260808-WA0077.jpg",
+            "images/IMG-20260808-WA0078.jpg"
         ]
     }
 ]
@@ -297,10 +297,6 @@ def send_telegram_message(message_text):
         return False, " | ".join(error_messages)
 
 def send_telegram_order(order_data):
-    payment_info = f"*Payment Method:* {order_data['payment_method']}"
-    if order_data['payment_method'] == "Online Payment":
-        payment_info += f"\n*Transaction ID / Reference:* `{order_data['transaction_id']}`"
-
     message_text = (
         f"🛒 *NEW ORDER RECEIVED*\n"
         f"-------------------------------\n"
@@ -309,7 +305,8 @@ def send_telegram_order(order_data):
         f"*Quantity:* {order_data['quantity']}\n"
         f"*Total Price:* PKR {order_data['total_price']:,}\n\n"
         f"💳 *PAYMENT INFO*\n"
-        f"{payment_info}\n\n"
+        f"*Payment Method:* Online Payment (JazzCash)\n"
+        f"*Transaction ID / Reference:* `{order_data['transaction_id']}`\n\n"
         f"👤 *CUSTOMER DETAILS*\n"
         f"*Name:* {order_data['customer_name']}\n"
         f"*Phone:* {order_data['customer_phone']}\n"
@@ -517,27 +514,17 @@ if st.session_state.selected_product is not None:
         st.info(f"Total Amount: **PKR {total_price:,}/-**")
         
         st.write("### Payment Method")
-        payment_method = st.radio(
-            "Select Payment Option *",
-            ["Online Payment", "COD (Cash on Delivery)"],
-            key=f"payment_radio_{prod['id']}"
+        st.success(
+            "📱 **JazzCash Payment Details**\n\n"
+            "• **Account Number:** `0305-8866692`\n\n"
+            "• **Account Name:** Rimsha Fatima\n\n"
+            "Please send the total amount to the JazzCash account above and enter your Transaction ID (TID) below."
         )
-
-        if payment_method == "Online Payment":
-            st.success(
-                "📱 **JazzCash Payment Details**\n\n"
-                "• **Account Number:** `0305-8866692`\n\n"
-                "• **Account Name:** Rimsha Fatima\n\n"
-                "Please send the total amount to the JazzCash account above and enter your transaction ID (TID) below."
-            )
 
         st.divider()
         
         with st.form("checkout_form"):
-            transaction_id = ""
-            if payment_method == "Online Payment":
-                transaction_id = st.text_input("Transaction ID (TID) / Reference Number *")
-            
+            transaction_id = st.text_input("Transaction ID (TID) / Reference Number *")
             customer_name = st.text_input("Full Name *")
             customer_phone = st.text_input("Phone Number *")
             customer_address = st.text_area("Delivery Address *")
@@ -547,14 +534,14 @@ if st.session_state.selected_product is not None:
             
             if submitted:
                 missing_fields = []
+                if not transaction_id.strip():
+                    missing_fields.append("Transaction ID (TID)")
                 if not customer_name.strip():
                     missing_fields.append("Full Name")
                 if not customer_phone.strip():
                     missing_fields.append("Phone Number")
                 if not customer_address.strip():
                     missing_fields.append("Delivery Address")
-                if payment_method == "Online Payment" and not transaction_id.strip():
-                    missing_fields.append("Transaction ID (TID)")
 
                 if missing_fields:
                     st.error(f"Please fill in all required fields: {', '.join(missing_fields)}.")
@@ -564,7 +551,6 @@ if st.session_state.selected_product is not None:
                         "product_name": prod["name"],
                         "quantity": quantity,
                         "total_price": total_price,
-                        "payment_method": payment_method,
                         "transaction_id": transaction_id,
                         "customer_name": customer_name,
                         "customer_phone": customer_phone,
