@@ -15,10 +15,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# Injected CSS & JS for Viewport Scroll Transitions and Clean UI
+# 1. IMMEDIATE CSS INJECTION (Prevents Flash of Unstyled Header/Toolbar)
 st.markdown("""
 <style>
-    /* 1. Hide Hamburger Menu, Footer, Status/Toolbar, and Manage App Button */
+    /* Prevent initial flashing by hiding header/footer/menu immediately */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+    }
+    
     #MainMenu,
     footer,
     [data-testid="stStatusWidget"],
@@ -27,11 +31,6 @@ st.markdown("""
     div[data-testid="stToolbar"] {
         display: none !important;
         visibility: hidden !important;
-    }
-
-    /* 2. Transparent Header Bar (Keeps Sidebar Toggle Button Visible) */
-    header[data-testid="stHeader"] {
-        background: transparent !important;
     }
 
     /* Fixed Animated Gradient Background attached to root container via pseudo-element */
@@ -553,6 +552,7 @@ if st.session_state.selected_product is not None:
     show_order_modal()
 
 # -----------------------------------------------------------------------------
+#
 # Bottom Interactive Sections (Review & Brand Opinion Forms)
 # -----------------------------------------------------------------------------
 st.divider()
