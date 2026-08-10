@@ -7,15 +7,15 @@ import base64
 import os
 
 # -----------------------------------------------------------------------------
-# Configuration & Global Styling (Working Animated Gradient + Glassmorphism)
+# Configuration & Global Styling (Animated Gradient + Scroll Animations)
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Resins by R",
+    page_title="Resins Store Catalog",
     page_icon="💍",
     layout="wide"
 )
 
-# Injected Fullscreen Animated Layer + Glassmorphism Styling
+# Injected CSS & JS for Viewport Scroll Transitions
 st.markdown("""
 <style>
     /* Animated Gradient Background Element */
@@ -38,7 +38,6 @@ st.markdown("""
         animation: diagonalMove 12s linear infinite alternate;
     }
 
-    /* Keyframes animating actual CSS translation across the diagonal axis */
     @keyframes diagonalMove {
         0% {
             transform: translate(0, 0);
@@ -111,18 +110,80 @@ st.markdown("""
         border-radius: 10px !important;
     }
 
-    /* Make Streamlit star icons larger and gold when active */
+    /* Star Rating Scale */
     div[data-testid="stFeedback"] button {
         transform: scale(1.3);
         margin-right: 8px;
     }
+
+    /* -------------------------------------------------------------------------
+       Scroll Transition Rules (Fade-In-Upward on Scroll)
+       ------------------------------------------------------------------------- */
+    .scroll-target {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        will-change: opacity, transform;
+    }
+
+    .scroll-target.in-view {
+        opacity: 1;
+        transform: translateY(0px);
+    }
 </style>
 
-<!-- Injected HTML element behind app UI -->
+<!-- Background Element -->
 <div id="animated-bg"></div>
 """, unsafe_allow_html=True)
 
-# Your Verified Telegram Bot Credentials & Recipient Chat IDs
+# Inject IntersectionObserver script via Streamlit iframe container
+components.html("""
+<script>
+    function setupScrollObserver() {
+        const parentDoc = window.parent.document;
+        
+        // Target main UI content blocks (headers, containers, elements, forms)
+        const selectors = [
+            'div[data-testid="stVerticalBlock"] > div',
+            'div[data-testid="stMarkdownContainer"]',
+            'div[data-testid="column"]',
+            'form',
+            'section[data-testid="stSidebar"]'
+        ];
+        
+        const elementsToObserve = parentDoc.querySelectorAll(selectors.join(', '));
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px 0px -50px 0px',
+            threshold: 0.15
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                } else {
+                    entry.target.classList.remove('in-view');
+                }
+            });
+        }, observerOptions);
+
+        elementsToObserve.forEach(el => {
+            if (!el.classList.contains('scroll-target')) {
+                el.classList.add('scroll-target');
+            }
+            observer.observe(el);
+        });
+    }
+
+    // Initialize and re-run check dynamically on updates
+    setTimeout(setupScrollObserver, 300);
+    setInterval(setupScrollObserver, 1500);
+</script>
+""", height=0, width=0)
+
+# Telegram Credentials
 TELEGRAM_BOT_TOKEN = "8644129117:AAG3CJ4xJVteiTmwuImnTQz5PXWFvhfqPLs"
 TELEGRAM_CHAT_IDS = ["6359572760", "8675071152"]
 
@@ -146,13 +207,11 @@ PRODUCTS = [
 # Helper Functions
 # -----------------------------------------------------------------------------
 def generate_order_number():
-    """Generates a unique order ID."""
     timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M")
     rand_id = random.randint(100, 999)
     return f"ORD-{timestamp}-{rand_id}"
 
 def send_telegram_message(message_text):
-    """Generic payload sender dispatching orders, reviews, and opinions to all configured Chat IDs."""
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     all_success = True
     error_messages = []
@@ -178,7 +237,6 @@ def send_telegram_message(message_text):
         return False, " | ".join(error_messages)
 
 def send_telegram_order(order_data):
-    """Sends background order notifications directly to all specified Telegram recipient accounts."""
     payment_info = f"*Payment Method:* {order_data['payment_method']}"
     if order_data['payment_method'] == "Online Payment":
         payment_info += f"\n*Transaction ID / Reference:* `{order_data['transaction_id']}`"
@@ -202,7 +260,6 @@ def send_telegram_order(order_data):
     return send_telegram_message(message_text)
 
 def trigger_side_party_poppers():
-    """Fires subtle party popper confetti from the screen sides."""
     confetti_html = """
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <script>
@@ -225,7 +282,6 @@ def trigger_side_party_poppers():
     components.html(confetti_html, height=0, width=0)
 
 def get_base64_image(image_path):
-    """Converts local image to base64 so it renders safely inside HTML components."""
     if os.path.exists(image_path):
         with open(image_path, "rb") as img_file:
             encoded = base64.b64encode(img_file.read()).decode("utf-8")
@@ -233,7 +289,6 @@ def get_base64_image(image_path):
     return None
 
 def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
-    """Renders an automatic horizontal slider cycling photos every 4-5 seconds."""
     img_html_elements = []
     
     for idx, path in enumerate(image_paths):
@@ -291,16 +346,16 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
-st.title("Resins by R")
+st.title("🛍️ Resins Store Catalog")
 st.write("Browse products and place orders instantly.")
 
-# Sidebar Filters & Developer Info
+# Sidebar Filters
 st.sidebar.header("Filter Products")
 categories = ["All"] + sorted(list(set(p["category"] for p in PRODUCTS)))
 selected_category = st.sidebar.selectbox("Select Category", categories)
 
 st.sidebar.divider()
-st.sidebar.caption("**Web Developer:** 0314-4012872")
+st.sidebar.caption("👨‍💻 **Web Developer:** 0314-4012872")
 
 filtered_products = PRODUCTS if selected_category == "All" else [p for p in PRODUCTS if p["category"] == selected_category]
 
@@ -357,7 +412,7 @@ if st.session_state.selected_product is not None:
 
         if payment_method == "Online Payment":
             st.success(
-                "**JazzCash Payment Details**\n\n"
+                "📱 **JazzCash Payment Details**\n\n"
                 "• **Account Number:** `0305-8866692`\n\n"
                 "• **Account Name:** Rimsha Fatima\n\n"
                 "Please send the total amount to the JazzCash account above and enter your transaction ID (TID) below."
@@ -432,7 +487,6 @@ st.divider()
 # Section 1: Customer Review Box with Interactive Star Selection
 st.subheader("⭐ Leave a Review")
 
-# Streamlit native feedback component renders 5 interactive outlined stars (0 to 4 index)
 star_rating_index = st.feedback("stars")
 
 with st.form("client_review_form"):
@@ -445,7 +499,6 @@ with st.form("client_review_form"):
         elif not review_text.strip():
             st.error("Please fill in 'How was your experience:' before submitting.")
         else:
-            # st.feedback returns 0-indexed integers (0 = 1 star, 4 = 5 stars)
             rating_val = star_rating_index + 1
             stars_visual = f"{'★' * rating_val}{'☆' * (5 - rating_val)}"
             
@@ -502,4 +555,4 @@ with st.form("client_opinion_form"):
 
 # Footer Developer Information
 st.divider()
-st.caption("Web Developer: 0314-4012872")
+st.caption("👨‍💻 Web Developer: 0314-4012872")
