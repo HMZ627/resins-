@@ -257,8 +257,8 @@ PRODUCTS = [
         "description": "Made with love, using the best quality resins and materials, by (ResinsbyR), the handcrafted masterpiece of ours, brings royalty and an attractive look to your wall, enhancing the overall outlook of the room.",
         "price": 5000,
         "images": [
-            "images/clock1.jpg",
-            "images/clock2.jpg"
+            "images/IMG-20260808-WA0078.jpg",
+            "images/IMG-20260808-WA0077.jpg"
         ]
     }
 ]
