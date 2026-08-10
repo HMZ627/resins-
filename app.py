@@ -7,7 +7,7 @@ import base64
 import os
 
 # -----------------------------------------------------------------------------
-# Configuration & Global Styling (Pure CSS Animated Background + Safe Scroll Animations)
+# Configuration & Global Styling (Pure CSS Animated Background + UI Cleanups)
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="Resins Store Catalog",
@@ -15,9 +15,21 @@ st.set_page_config(
     layout="wide"
 )
 
-# Injected CSS & JS for Viewport Scroll Transitions
+# Injected CSS & JS for Viewport Scroll Transitions and Clean UI
 st.markdown("""
 <style>
+    /* Hide Streamlit Header Bar, Hamburger Menu, Footer, and Manage App Button */
+    header[data-testid="stHeader"],
+    footer,
+    #MainMenu,
+    [data-testid="stStatusWidget"],
+    [data-testid="manage-app-button"],
+    .stDeployButton,
+    div[data-testid="stToolbar"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
     /* Fixed Animated Gradient Background attached to root container via pseudo-element */
     [data-testid="stAppViewContainer"] {
         background: transparent !important;
@@ -313,7 +325,6 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
 
     unique_id = f"carousel_{random.randint(1000, 9999)}"
     
-    # Generate navigation dots HTML
     dots_html = "".join([
         f'<span class="dot{" active" if i == 0 else ""}" data-index="{i}" style="'
         f'height: 10px; width: 10px; margin: 0 4px; background-color: rgba(255, 255, 255, 0.4); '
