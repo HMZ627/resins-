@@ -10,8 +10,8 @@ import os
 # Configuration & Global Styling (Pure CSS Animated Background + UI Cleanups)
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Resins Store Catalog",
-    page_icon="💍",
+    page_title="Resins By R",
+    page_icon="❤️",
     layout="wide"
 )
 
@@ -456,7 +456,7 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
-st.title("🛍️ Resins Store Catalog")
+st.title("Resins By R")
 st.write("Browse products and place orders instantly.")
 
 # Sidebar Filters
@@ -465,7 +465,7 @@ categories = ["All"] + sorted(list(set(p["category"] for p in PRODUCTS)))
 selected_category = st.sidebar.selectbox("Select Category", categories)
 
 st.sidebar.divider()
-st.sidebar.caption("👨‍💻 **Web Developer:** 0314-4012872")
+st.sidebar.caption("**Web Developer:** 0314-4012872")
 
 filtered_products = PRODUCTS if selected_category == "All" else [p for p in PRODUCTS if p["category"] == selected_category]
 
@@ -515,9 +515,9 @@ if st.session_state.selected_product is not None:
         
         st.write("### Payment Method")
         st.success(
-            "📱 **JazzCash Payment Details**\n\n"
+            "**JazzCash Payment Details**\n\n"
             "• **Account Number:** `0305-8866692`\n\n"
-            "• **Account Name:** Rimsha Fatima\n\n"
+            "• **Account Name:** Ramsha Fatima\n\n"
             "Please send the total amount to the JazzCash account above and enter your Transaction ID (TID) below."
         )
 
@@ -568,7 +568,7 @@ if st.session_state.selected_product is not None:
                         st.error(f"Failed to deliver order message to Telegram. Error: {result}")
 
         st.markdown(
-            "💬 *For further order details, contact on "
+            "*For further order details, contact on "
             "[+92 305-8866692](https://wa.me/923058866692) through WhatsApp.*"
         )
         
@@ -654,4 +654,4 @@ with st.form("client_opinion_form"):
 
 # Footer Developer Information
 st.divider()
-st.caption("👨‍💻 Web Developer: 0314-4012872")
+st.caption("Web Developer: 0314-4012872")
