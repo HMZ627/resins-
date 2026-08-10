@@ -15,22 +15,52 @@ st.set_page_config(
     layout="wide"
 )
 
-# 1. IMMEDIATE CSS INJECTION (Prevents Flash of Unstyled Header/Toolbar)
+# 1. IMMEDIATE CSS INJECTION (Fixes Sidebar Toggle Visibility & Eliminates Flash)
 st.markdown("""
 <style>
-    /* Prevent initial flashing by hiding header/footer/menu immediately */
-    header[data-testid="stHeader"] {
-        background: transparent !important;
-    }
-    
+    /* 1. Hide ONLY the top-right toolbar, deploy button, and developer tools */
     #MainMenu,
     footer,
     [data-testid="stStatusWidget"],
     [data-testid="manage-app-button"],
     .stDeployButton,
-    div[data-testid="stToolbar"] {
+    [data-testid="stDecoration"],
+    [data-testid="stHeaderActionElements"] {
         display: none !important;
         visibility: hidden !important;
+    }
+
+    /* 2. Transparent Header Bar */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+        z-index: 99990 !important;
+    }
+
+    /* 3. Explicitly Style & Force Display of the Sidebar Toggle Button */
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="collapsedControl"],
+    header[data-testid="stHeader"] button {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 8px !important;
+        z-index: 99999 !important;
+        margin-left: 8px !important;
+        margin-top: 4px !important;
+    }
+
+    /* Ensure arrow icons inside the sidebar button are crisp white */
+    [data-testid="stSidebarCollapseButton"] svg,
+    [data-testid="collapsedControl"] svg,
+    header[data-testid="stHeader"] button svg {
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
+        color: #ffffff !important;
     }
 
     /* Fixed Animated Gradient Background attached to root container via pseudo-element */
@@ -552,7 +582,6 @@ if st.session_state.selected_product is not None:
     show_order_modal()
 
 # -----------------------------------------------------------------------------
-#
 # Bottom Interactive Sections (Review & Brand Opinion Forms)
 # -----------------------------------------------------------------------------
 st.divider()
