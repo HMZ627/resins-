@@ -7,7 +7,7 @@ import base64
 import os
 
 # -----------------------------------------------------------------------------
-# Configuration & Global Styling (Animated Gradient + Scroll Animations)
+# Configuration & Global Styling (Pure CSS Animated Background + Safe Scroll Animations)
 # -----------------------------------------------------------------------------
 st.set_page_config(
     page_title="Resins Store Catalog",
@@ -18,14 +18,19 @@ st.set_page_config(
 # Injected CSS & JS for Viewport Scroll Transitions
 st.markdown("""
 <style>
-    /* Animated Gradient Background Element */
-    #animated-bg {
+    /* Fixed Animated Gradient Background attached to root container via pseudo-element */
+    [data-testid="stAppViewContainer"] {
+        background: transparent !important;
+    }
+
+    [data-testid="stAppViewContainer"]::before {
+        content: "";
         position: fixed;
         top: -50%;
         left: -50%;
         width: 200%;
         height: 200%;
-        z-index: -9999;
+        z-index: -99999;
         background: linear-gradient(
             135deg, 
             #1a000d 0%, 
@@ -36,6 +41,7 @@ st.markdown("""
             #4a001e 100%
         );
         animation: diagonalMove 12s linear infinite alternate;
+        pointer-events: none;
     }
 
     @keyframes diagonalMove {
@@ -86,7 +92,7 @@ st.markdown("""
 
     /* Glassmorphism Sidebar */
     section[data-testid="stSidebar"] {
-        background: rgba(30, 0, 15, 0.55) !important;
+        background: rgba(30, 0, 15, 0.85) !important;
         backdrop-filter: blur(16px) !important;
         -webkit-backdrop-filter: blur(16px) !important;
         border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
@@ -117,7 +123,7 @@ st.markdown("""
     }
 
     /* -------------------------------------------------------------------------
-       Scroll Transition Rules (Fade-In-Upward on Scroll)
+       Scroll Transition Rules (Applied Main Content Area Only)
        ------------------------------------------------------------------------- */
     .scroll-target {
         opacity: 0;
@@ -131,32 +137,31 @@ st.markdown("""
         transform: translateY(0px);
     }
 </style>
-
-<!-- Background Element -->
-<div id="animated-bg"></div>
 """, unsafe_allow_html=True)
 
-# Inject IntersectionObserver script via Streamlit iframe container
+# Inject IntersectionObserver script strictly targeting main content
 components.html("""
 <script>
     function setupScrollObserver() {
         const parentDoc = window.parent.document;
         
-        // Target main UI content blocks (headers, containers, elements, forms)
+        // Isolate search strictly inside the main section (ignoring sidebar)
+        const mainContainer = parentDoc.querySelector('section.main') || parentDoc.querySelector('[data-testid="stMain"]');
+        if (!mainContainer) return;
+
         const selectors = [
             'div[data-testid="stVerticalBlock"] > div',
             'div[data-testid="stMarkdownContainer"]',
             'div[data-testid="column"]',
-            'form',
-            'section[data-testid="stSidebar"]'
+            'form'
         ];
         
-        const elementsToObserve = parentDoc.querySelectorAll(selectors.join(', '));
+        const elementsToObserve = mainContainer.querySelectorAll(selectors.join(', '));
 
         const observerOptions = {
             root: null,
-            rootMargin: '0px 0px -50px 0px',
-            threshold: 0.15
+            rootMargin: '0px 0px -40px 0px',
+            threshold: 0.12
         };
 
         const observer = new IntersectionObserver((entries) => {
@@ -177,7 +182,6 @@ components.html("""
         });
     }
 
-    // Initialize and re-run check dynamically on updates
     setTimeout(setupScrollObserver, 300);
     setInterval(setupScrollObserver, 1500);
 </script>
