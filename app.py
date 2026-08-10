@@ -298,8 +298,11 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
     for idx, path in enumerate(image_paths):
         b64_str = get_base64_image(path)
         if b64_str:
+            active_class = " active" if idx == 0 else ""
             img_html_elements.append(
-                f'<div class="slide" style="min-width: 100%; width: 100%; flex-shrink: 0; scroll-snap-align: start;">'
+                f'<div class="slide{active_class}" style="'
+                f'position: absolute; top: 0; left: 0; width: 100%; height: 100%; '
+                f'opacity: 0; transition: opacity 1s ease-in-out; pointer-events: none; border-radius: 12px;">'
                 f'<img src="{b64_str}" style="width: 100%; height: {height}px; object-fit: cover; border-radius: 12px;">'
                 f'</div>'
             )
@@ -310,38 +313,89 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
 
     unique_id = f"carousel_{random.randint(1000, 9999)}"
     
+    # Generate navigation dots HTML
+    dots_html = "".join([
+        f'<span class="dot{" active" if i == 0 else ""}" data-index="{i}" style="'
+        f'height: 10px; width: 10px; margin: 0 4px; background-color: rgba(255, 255, 255, 0.4); '
+        f'border-radius: 50%; display: inline-block; cursor: pointer; transition: all 0.3s ease;"></span>'
+        for i in range(len(img_html_elements))
+    ])
+
     carousel_html = f"""
     <div id="{unique_id}_container" style="
-        display: flex;
-        overflow-x: auto;
-        scroll-snap-type: x mandatory;
-        scroll-behavior: smooth;
-        gap: 0px;
+        position: relative;
+        width: 100%;
+        height: {height}px;
         border-radius: 12px;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
+        overflow: hidden;
     ">
         {''.join(img_html_elements)}
+        <div style="
+            position: absolute;
+            bottom: 12px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        ">
+            {dots_html}
+        </div>
     </div>
     <style>
-        #{unique_id}_container::-webkit-scrollbar {{ display: none; }}
+        #{unique_id}_container .slide.active {{
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }}
+        #{unique_id}_container .dot.active {{
+            background-color: #ffffff !important;
+            transform: scale(1.3);
+        }}
     </style>
     <script>
         (function() {{
             const container = document.getElementById('{unique_id}_container');
-            const totalSlides = {len(img_html_elements)};
+            if (!container) return;
+            const slides = container.getElementsByClassName('slide');
+            const dots = container.getElementsByClassName('dot');
+            const totalSlides = slides.length;
             let currentIndex = 0;
+            let timer = null;
 
-            if (totalSlides > 1) {{
-                setInterval(() => {{
-                    currentIndex = (currentIndex + 1) % totalSlides;
-                    const scrollAmount = container.clientWidth * currentIndex;
-                    container.scrollTo({{
-                        left: scrollAmount,
-                        behavior: 'smooth'
-                    }});
-                }}, {interval_sec * 1000});
+            function showSlide(index) {{
+                for (let i = 0; i < totalSlides; i++) {{
+                    slides[i].classList.remove('active');
+                    if (dots[i]) dots[i].classList.remove('active');
+                }}
+                currentIndex = index;
+                slides[currentIndex].classList.add('active');
+                if (dots[currentIndex]) dots[currentIndex].classList.add('active');
             }}
+
+            function nextSlide() {{
+                let next = (currentIndex + 1) % totalSlides;
+                showSlide(next);
+            }}
+
+            function startTimer() {{
+                if (totalSlides > 1) {{
+                    timer = setInterval(nextSlide, {interval_sec * 1000});
+                }}
+            }}
+
+            function resetTimer() {{
+                if (timer) clearInterval(timer);
+                startTimer();
+            }}
+
+            for (let i = 0; i < dots.length; i++) {{
+                dots[i].addEventListener('click', function() {{
+                    showSlide(i);
+                    resetTimer();
+                }});
+            }}
+
+            startTimer();
         }})();
     </script>
     """
