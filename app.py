@@ -18,16 +18,20 @@ st.set_page_config(
 # Injected CSS & JS for Viewport Scroll Transitions and Clean UI
 st.markdown("""
 <style>
-    /* Hide Streamlit Header Bar, Hamburger Menu, Footer, and Manage App Button */
-    header[data-testid="stHeader"],
-    footer,
+    /* 1. Hide Hamburger Menu, Footer, Status/Toolbar, and Manage App Button */
     #MainMenu,
+    footer,
     [data-testid="stStatusWidget"],
     [data-testid="manage-app-button"],
     .stDeployButton,
     div[data-testid="stToolbar"] {
         display: none !important;
         visibility: hidden !important;
+    }
+
+    /* 2. Transparent Header Bar (Keeps Sidebar Toggle Button Visible) */
+    header[data-testid="stHeader"] {
+        background: transparent !important;
     }
 
     /* Fixed Animated Gradient Background attached to root container via pseudo-element */
