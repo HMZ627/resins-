@@ -10,12 +10,12 @@ import os
 # Configuration & Global Styling (Pure CSS Animated Background + UI Cleanups)
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Resins By R",
-    page_icon="❤️",
+    page_title="Resins Store Catalog",
+    page_icon="💍",
     layout="wide"
 )
 
-# 1. IMMEDIATE CSS INJECTION (Fixes Sidebar Toggle Visibility & Eliminates Flash)
+# 1. IMMEDIATE CSS INJECTION
 st.markdown("""
 <style>
     /* 1. Hide ONLY the top-right toolbar, deploy button, and developer tools */
@@ -54,7 +54,6 @@ st.markdown("""
         margin-top: 4px !important;
     }
 
-    /* Ensure arrow icons inside the sidebar button are crisp white */
     [data-testid="stSidebarCollapseButton"] svg,
     [data-testid="collapsedControl"] svg,
     header[data-testid="stHeader"] button svg {
@@ -63,7 +62,7 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* Fixed Animated Gradient Background attached to root container via pseudo-element */
+    /* Fixed Animated Gradient Background */
     [data-testid="stAppViewContainer"] {
         background: transparent !important;
     }
@@ -90,21 +89,15 @@ st.markdown("""
     }
 
     @keyframes diagonalMove {
-        0% {
-            transform: translate(0, 0);
-        }
-        100% {
-            transform: translate(-25%, -25%);
-        }
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(-25%, -25%); }
     }
 
-    /* Transparent Streamlit Shell */
     .stApp {
         background: transparent !important;
         color: #ffffff !important;
     }
 
-    /* Glassmorphism Cards & Containers */
     div[data-testid="stVerticalBlock"] > div[style*="flex"] {
         background: rgba(255, 255, 255, 0.07) !important;
         backdrop-filter: blur(12px) !important;
@@ -115,7 +108,6 @@ st.markdown("""
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
     }
 
-    /* Glassmorphism Buttons */
     .stButton > button {
         background: rgba(255, 255, 255, 0.12) !important;
         backdrop-filter: blur(10px) !important;
@@ -135,7 +127,6 @@ st.markdown("""
         box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4) !important;
     }
 
-    /* Glassmorphism Sidebar */
     section[data-testid="stSidebar"] {
         background: rgba(30, 0, 15, 0.85) !important;
         backdrop-filter: blur(16px) !important;
@@ -143,7 +134,6 @@ st.markdown("""
         border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
-    /* Glassmorphism Dialog Modal */
     div[role="dialog"] {
         background: rgba(35, 2, 20, 0.85) !important;
         backdrop-filter: blur(20px) !important;
@@ -153,7 +143,6 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* Input Fields Customization */
     .stTextInput > div > div > input, .stTextArea > div > div > textarea, .stSelectbox > div > div {
         background: rgba(255, 255, 255, 0.08) !important;
         border: 1px solid rgba(255, 255, 255, 0.2) !important;
@@ -161,15 +150,11 @@ st.markdown("""
         border-radius: 10px !important;
     }
 
-    /* Star Rating Scale */
     div[data-testid="stFeedback"] button {
         transform: scale(1.3);
         margin-right: 8px;
     }
 
-    /* -------------------------------------------------------------------------
-       Scroll Transition Rules (Applied Main Content Area Only)
-       ------------------------------------------------------------------------- */
     .scroll-target {
         opacity: 0;
         transform: translateY(40px);
@@ -184,13 +169,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Inject IntersectionObserver script strictly targeting main content
+# Inject IntersectionObserver script
 components.html("""
 <script>
     function setupScrollObserver() {
         const parentDoc = window.parent.document;
-        
-        // Isolate search strictly inside the main section (ignoring sidebar)
         const mainContainer = parentDoc.querySelector('section.main') || parentDoc.querySelector('[data-testid="stMain"]');
         if (!mainContainer) return;
 
@@ -260,6 +243,18 @@ PRODUCTS = [
             "images/IMG-20260808-WA0077.jpg",
             "images/IMG-20260808-WA0078.jpg"
         ]
+    },
+    {
+        "id": 3,
+        "name": "Resin Shield (6-inches)",
+        "category": "Resin shields",
+        "description": "Resins shield, made with absolute precision and care, text can be written of your choice. Holds your kind love for your own loved ones.\nAdding picture will cost PKR 100/-",
+        "price": 2300,
+        "images": [
+            "images/shield1.jpg",
+            "images/shield2.jpg",
+            "images/shield3.jpg"
+        ]
     }
 ]
 
@@ -296,13 +291,26 @@ def send_telegram_message(message_text):
     else:
         return False, " | ".join(error_messages)
 
-def send_telegram_order(order_data):
+def send_telegram_photo(file_bytes, caption):
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
+    for chat_id in TELEGRAM_CHAT_IDS:
+        files = {'photo': file_bytes}
+        data = {'chat_id': chat_id, 'caption': caption, 'parse_mode': 'Markdown'}
+        try:
+            requests.post(url, data=data, files=files, timeout=10)
+        except Exception:
+            pass
+
+def send_telegram_order(order_data, uploaded_files=None):
+    add_pic_str = "Yes (+PKR 100)" if order_data.get('add_pictures') else "No"
+    
     message_text = (
         f"🛒 *NEW ORDER RECEIVED*\n"
         f"-------------------------------\n"
         f"*Order No:* `{order_data['order_no']}`\n"
         f"*Product:* {order_data['product_name']}\n"
         f"*Quantity:* {order_data['quantity']}\n"
+        f"*Picture Customization:* {add_pic_str}\n"
         f"*Total Price:* PKR {order_data['total_price']:,}\n\n"
         f"💳 *PAYMENT INFO*\n"
         f"*Payment Method:* Online Payment (JazzCash)\n"
@@ -314,7 +322,17 @@ def send_telegram_order(order_data):
         f"*Customization/Notes:* {order_data['customer_notes'] or 'None'}\n"
         f"-------------------------------"
     )
-    return send_telegram_message(message_text)
+    
+    success, res_str = send_telegram_message(message_text)
+    
+    # Send custom uploaded photos if present
+    if success and uploaded_files:
+        for idx, file in enumerate(uploaded_files, 1):
+            file.seek(0)
+            photo_caption = f"*Order Photo {idx}/{len(uploaded_files)}* for Order `{order_data['order_no']}`"
+            send_telegram_photo(file.getvalue(), photo_caption)
+
+    return success, res_str
 
 def trigger_side_party_poppers():
     confetti_html = """
@@ -498,7 +516,7 @@ if st.session_state.selected_product is not None:
         st.subheader(prod["name"])
         st.write(f"**Category:** {prod['category']}")
         st.write(f"**Description:** {prod['description']}")
-        st.write(f"**Price per item:** PKR {prod['price']:,}/-")
+        st.write(f"**Base Price:** PKR {prod['price']:,}/-")
         
         st.divider()
         
@@ -510,14 +528,35 @@ if st.session_state.selected_product is not None:
             key=f"qty_input_{prod['id']}"
         )
         
-        total_price = quantity * prod["price"]
+        # Resin shields customization check
+        add_pictures = False
+        uploaded_photos = None
+        picture_extra_cost = 0
+
+        if prod["category"] == "Resin shields":
+            add_pictures = st.checkbox("Add pictures (+ PKR 100/-)", key=f"pic_chk_{prod['id']}")
+            if add_pictures:
+                picture_extra_cost = 100
+                uploaded_photos = st.file_uploader(
+                    "➕ Upload pictures (Max 3)", 
+                    type=["jpg", "jpeg", "png", "webp"], 
+                    accept_multiple_files=True,
+                    key=f"shield_pics_{prod['id']}"
+                )
+                if uploaded_photos and len(uploaded_photos) > 3:
+                    st.warning("Maximum 3 pictures allowed. Only the first 3 will be processed.")
+                    uploaded_photos = uploaded_photos[:3]
+
+        unit_price = prod["price"] + picture_extra_cost
+        total_price = quantity * unit_price
+        
         st.info(f"Total Amount: **PKR {total_price:,}/-**")
         
         st.write("### Payment Method")
         st.success(
             "**JazzCash Payment Details**\n\n"
             "• **Account Number:** `0305-8866692`\n\n"
-            "• **Account Name:** Ramsha Fatima\n\n"
+            "• **Account Name:** Rimsha Fatima\n\n"
             "Please send the total amount to the JazzCash account above and enter your Transaction ID (TID) below."
         )
 
@@ -528,7 +567,7 @@ if st.session_state.selected_product is not None:
             customer_name = st.text_input("Full Name *")
             customer_phone = st.text_input("Phone Number *")
             customer_address = st.text_area("Delivery Address *")
-            customer_notes = st.text_area("Color Customization / Special Instructions (Optional)")
+            customer_notes = st.text_area("Color Customization / Text Choice / Special Instructions (Optional)")
             
             submitted = st.form_submit_button("Submit Order")
             
@@ -542,6 +581,8 @@ if st.session_state.selected_product is not None:
                     missing_fields.append("Phone Number")
                 if not customer_address.strip():
                     missing_fields.append("Delivery Address")
+                if add_pictures and not uploaded_photos:
+                    missing_fields.append("Uploaded Pictures (Since 'Add pictures' was checked)")
 
                 if missing_fields:
                     st.error(f"Please fill in all required fields: {', '.join(missing_fields)}.")
@@ -550,6 +591,7 @@ if st.session_state.selected_product is not None:
                         "order_no": generate_order_number(),
                         "product_name": prod["name"],
                         "quantity": quantity,
+                        "add_pictures": add_pictures,
                         "total_price": total_price,
                         "transaction_id": transaction_id,
                         "customer_name": customer_name,
@@ -558,8 +600,8 @@ if st.session_state.selected_product is not None:
                         "customer_notes": customer_notes
                     }
                     
-                    with st.spinner("Processing order..."):
-                        success, result = send_telegram_order(order_data)
+                    with st.spinner("Processing order & uploading image assets..."):
+                        success, result = send_telegram_order(order_data, uploaded_files=uploaded_photos)
                     
                     if success:
                         st.success(f"🎉 Thank you, {customer_name}! Your order #{order_data['order_no']} has been placed successfully.")
