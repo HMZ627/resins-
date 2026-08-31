@@ -7,18 +7,158 @@ import base64
 import os
 
 # -----------------------------------------------------------------------------
-# Configuration & Global Styling (Pure CSS Animated Background + UI Cleanups)
+# Configuration & Global Styling
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Resins Store Catalog",
-    page_icon="💍",
+    page_title="Resins by R",
+    page_icon="❤️",
     layout="wide"
 )
 
-# 1. IMMEDIATE CSS INJECTION
+# 1. INTRO SPLASH ANIMATION (HTML/CSS)
+components.html("""
+<style>
+    #splash-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: linear-gradient(135deg, #1a000d 0%, #3d0017 50%, #1a000d 100%);
+        z-index: 999999;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        animation: fadeOutSplash 0.8s ease-in-out forwards;
+        animation-delay: 3.8s;
+    }
+
+    .droplet-wrapper {
+        position: relative;
+        width: 200px;
+        height: 200px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    /* Left & Right Droplets */
+    .droplet {
+        position: absolute;
+        width: 45px;
+        height: 45px;
+        background: radial-gradient(circle at 30% 30%, #ff66a3, #e91e63, #800020);
+        border-radius: 50% 50% 50% 0;
+        box-shadow: 0 0 20px rgba(233, 30, 99, 0.8), inset -2px -2px 6px rgba(0,0,0,0.4);
+    }
+
+    .droplet-left {
+        left: -300px;
+        transform: rotate(-45deg);
+        animation: mergeLeft 1.2s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+    }
+
+    .droplet-right {
+        right: -300px;
+        transform: rotate(135deg);
+        animation: mergeRight 1.2s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+    }
+
+    /* Central Splash Burst */
+    .splash-ring {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 4px solid #ff66a3;
+        opacity: 0;
+        animation: splashExpand 0.6s ease-out forwards;
+        animation-delay: 1.2s;
+    }
+
+    /* Central "R" Logo Reveal */
+    .logo-r {
+        font-family: 'Playfair Display', 'Georgia', serif;
+        font-size: 80px;
+        font-weight: 900;
+        color: #ffffff;
+        text-shadow: 0 0 25px #ff66a3, 0 0 50px #e91e63;
+        opacity: 0;
+        transform: scale(0.2);
+        animation: logoAppear 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        animation-delay: 1.35s;
+    }
+
+    /* Brand Name */
+    .brand-title {
+        font-family: 'Poppins', 'Segoe UI', sans-serif;
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: 4px;
+        color: #ffffff;
+        margin-top: 25px;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: titleSlideUp 0.8s ease-out forwards;
+        animation-delay: 1.8s;
+        text-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Keyframe Animations */
+    @keyframes mergeLeft {
+        0% { left: -300px; }
+        100% { left: calc(50% - 22px); }
+    }
+
+    @keyframes mergeRight {
+        0% { right: -300px; }
+        100% { right: calc(50% - 22px); }
+    }
+
+    @keyframes splashExpand {
+        0% { width: 10px; height: 10px; opacity: 1; border-width: 8px; }
+        100% { width: 180px; height: 180px; opacity: 0; border-width: 1px; }
+    }
+
+    @keyframes logoAppear {
+        0% { opacity: 0; transform: scale(0.2) rotate(-10deg); }
+        100% { opacity: 1; transform: scale(1) rotate(0deg); }
+    }
+
+    @keyframes titleSlideUp {
+        0% { opacity: 0; transform: translateY(20px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeOutSplash {
+        0% { opacity: 1; visibility: visible; }
+        100% { opacity: 0; visibility: hidden; }
+    }
+</style>
+
+<div id="splash-container">
+    <div class="droplet-wrapper">
+        <div class="droplet droplet-left"></div>
+        <div class="droplet droplet-right"></div>
+        <div class="splash-ring"></div>
+        <div class="logo-r">R</div>
+    </div>
+    <div class="brand-title">Resins by R</div>
+</div>
+
+<script>
+    setTimeout(() => {
+        const splash = document.getElementById('splash-container');
+        if (splash) splash.style.display = 'none';
+    }, 4600);
+</script>
+""", height=0)
+
+# 2. GLOBAL CSS STYLING
 st.markdown("""
 <style>
-    /* 1. Hide ONLY the top-right toolbar, deploy button, and developer tools */
     #MainMenu,
     footer,
     [data-testid="stStatusWidget"],
@@ -30,13 +170,11 @@ st.markdown("""
         visibility: hidden !important;
     }
 
-    /* 2. Transparent Header Bar */
     header[data-testid="stHeader"] {
         background: transparent !important;
         z-index: 99990 !important;
     }
 
-    /* 3. Explicitly Style & Force Display of the Sidebar Toggle Button */
     [data-testid="stSidebarCollapseButton"],
     [data-testid="collapsedControl"],
     header[data-testid="stHeader"] button {
@@ -62,7 +200,6 @@ st.markdown("""
         color: #ffffff !important;
     }
 
-    /* Fixed Animated Gradient Background */
     [data-testid="stAppViewContainer"] {
         background: transparent !important;
     }
@@ -169,7 +306,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Inject IntersectionObserver script
+# Intersection Observer for Scroll Effects
 components.html("""
 <script>
     function setupScrollObserver() {
@@ -325,7 +462,6 @@ def send_telegram_order(order_data, uploaded_files=None):
     
     success, res_str = send_telegram_message(message_text)
     
-    # Send custom uploaded photos if present
     if success and uploaded_files:
         for idx, file in enumerate(uploaded_files, 1):
             file.seek(0)
@@ -474,7 +610,7 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
-st.title("Resins By R")
+st.title("Resins by R")
 st.write("Browse products and place orders instantly.")
 
 # Sidebar Filters
@@ -528,7 +664,6 @@ if st.session_state.selected_product is not None:
             key=f"qty_input_{prod['id']}"
         )
         
-        # Resin shields customization check
         add_pictures = False
         uploaded_photos = None
         picture_extra_cost = 0
@@ -538,7 +673,7 @@ if st.session_state.selected_product is not None:
             if add_pictures:
                 picture_extra_cost = 100
                 uploaded_photos = st.file_uploader(
-                    "➕ Upload pictures (Max 3)", 
+                    "Upload pictures (Max 3)", 
                     type=["jpg", "jpeg", "png", "webp"], 
                     accept_multiple_files=True,
                     key=f"shield_pics_{prod['id']}"
@@ -621,12 +756,11 @@ if st.session_state.selected_product is not None:
     show_order_modal()
 
 # -----------------------------------------------------------------------------
-# Bottom Interactive Sections (Review & Brand Opinion Forms)
+# Bottom Interactive Sections
 # -----------------------------------------------------------------------------
 st.divider()
 
-# Section 1: Customer Review Box with Interactive Star Selection
-st.subheader("⭐ Leave a Review")
+st.subheader("Leave a Review")
 
 star_rating_index = st.feedback("stars")
 
@@ -659,7 +793,6 @@ with st.form("client_review_form"):
 
 st.divider()
 
-# Section 2: Brand Description
 st.markdown(
     '**"Resins by R"** is a brand worth to be trusted and attended, as it opts the '
     '"quality over quantity" fact, making the clients to trust with all their heart. '
@@ -672,7 +805,6 @@ st.markdown(
     '*(Resins By R)\'s Development team.*'
 )
 
-# Section 3: Client Opinion Form
 with st.form("client_opinion_form"):
     opinion_text = st.text_area("Your opinion:", placeholder="Share your suggestions or opinion with us...")
     opinion_submitted = st.form_submit_button("Submit Opinion")
@@ -694,6 +826,5 @@ with st.form("client_opinion_form"):
             else:
                 st.error(f"Could not submit opinion. Error: {err}")
 
-# Footer Developer Information
 st.divider()
 st.caption("Web Developer: 0314-4012872")
