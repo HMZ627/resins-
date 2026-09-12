@@ -5,6 +5,7 @@ import random
 import datetime
 import base64
 import os
+import mimetypes
 
 # -----------------------------------------------------------------------------
 # Configuration & Global Styling
@@ -40,11 +41,23 @@ st.markdown("""
     }
     @keyframes diagonalMove { 0% { transform: translate(0, 0); } 100% { transform: translate(-25%, -25%); } }
     .stApp { background: transparent !important; color: #ffffff !important; }
-    div[data-testid="stVerticalBlock"] > div[style*="flex"] {
-        background: rgba(255, 255, 255, 0.07) !important; backdrop-filter: blur(12px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important; border-radius: 16px !important; padding: 1rem !important;
+    
+    /* Animated Container Cards on Page Load */
+    div[data-testid="stColumn"] > div {
+        background: rgba(255, 255, 255, 0.07) !important; 
+        backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important; 
+        border-radius: 16px !important; 
+        padding: 1rem !important;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
+        animation: fadeInUp 0.8s ease-out forwards;
     }
+
+    @keyframes fadeInUp {
+        0% { opacity: 0; transform: translateY(30px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
     .stButton > button {
         background: rgba(255, 255, 255, 0.12) !important; backdrop-filter: blur(10px) !important;
         color: #ffffff !important; border: 1px solid rgba(255, 255, 255, 0.25) !important; border-radius: 12px !important;
@@ -67,13 +80,11 @@ st.markdown("""
         color: #ffffff !important; border-radius: 10px !important;
     }
     div[data-testid="stFeedback"] button { transform: scale(1.3); margin-right: 8px; }
-    .scroll-target { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); will-change: opacity, transform; }
-    .scroll-target.in-view { opacity: 1; transform: translateY(0px); }
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# Confidential Discord Webhook Configuration (Loaded via Secrets)
+# Confidential Discord Webhook Configuration
 # -----------------------------------------------------------------------------
 DISCORD_WEBHOOK_URL = st.secrets.get("DISCORD_WEBHOOK_URL", "")
 
@@ -117,7 +128,7 @@ PRODUCTS = [
 ]
 
 # -----------------------------------------------------------------------------
-# Helper Functions for Discord Integration
+# Helper Functions
 # -----------------------------------------------------------------------------
 def generate_order_number():
     timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M")
@@ -194,9 +205,15 @@ def trigger_side_party_poppers():
 
 def get_base64_image(image_path):
     if os.path.exists(image_path):
+        mime_type, _ = mimetypes.guess_type(image_path)
+        if not mime_type:
+            if image_path.endswith('.webp'):
+                mime_type = 'image/webp'
+            else:
+                mime_type = 'image/jpeg'
         with open(image_path, "rb") as img_file:
             encoded = base64.b64encode(img_file.read()).decode("utf-8")
-            return f"data:image/webp;base64,{encoded}"
+            return f"data:{mime_type};base64,{encoded}"
     return None
 
 def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
@@ -204,19 +221,19 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
     for idx, path in enumerate(image_paths):
         b64_str = get_base64_image(path)
         if b64_str:
-            active_class = " active" if idx == 0 else ""
+            active_style = "opacity: 1;" if idx == 0 else "opacity: 0;"
             img_html_elements.append(
-                f'<div class="slide{active_class}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1s ease-in-out; pointer-events: none; border-radius: 12px;">'
+                f'<div class="slide" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; {active_style} transition: opacity 1s ease-in-out; border-radius: 12px;">'
                 f'<img src="{b64_str}" style="width: 100%; height: {height}px; object-fit: cover; border-radius: 12px;">'
                 f'</div>'
             )
 
     if not img_html_elements:
-        st.error("Images could not be loaded. Please verify files exist in the 'images/' folder.")
+        st.error("⚠️ Images could not be loaded. Please ensure the 'images/' folder exists with valid files.")
         return
 
     unique_id = f"carousel_{random.randint(1000, 9999)}"
-    dots_html = "".join([f'<span class="dot{" active" if i == 0 else ""}" data-index="{i}" style="height: 10px; width: 10px; margin: 0 4px; background-color: rgba(255, 255, 255, 0.4); border-radius: 50%; display: inline-block; cursor: pointer; transition: all 0.3s ease;"></span>' for i in range(len(img_html_elements))])
+    dots_html = "".join([f'<span class="dot" style="height: 10px; width: 10px; margin: 0 4px; background-color: {"rgba(255, 255, 255, 0.9)" if i == 0 else "rgba(255, 255, 255, 0.3)"}; border-radius: 50%; display: inline-block; transition: all 0.3s ease;"></span>' for i in range(len(img_html_elements))])
 
     carousel_html = f"""
     <div id="{unique_id}_container" style="position: relative; width: 100%; height: {height}px; border-radius: 12px; overflow: hidden;">
@@ -232,22 +249,22 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
             const slides = container.getElementsByClassName('slide');
             const dots = container.getElementsByClassName('dot');
             let currentIndex = 0;
-            function showSlide(index) {{
-                for (let i = 0; i < slides.length; i++) {{
-                    slides[i].classList.remove('active');
-                    if (dots[i]) dots[i].classList.remove('active');
-                }}
-                currentIndex = index;
-                slides[currentIndex].classList.add('active');
-                if (dots[currentIndex]) dots[currentIndex].classList.add('active');
-            }}
-            setInterval(() => {{ showSlide((currentIndex + 1) % slides.length); }}, {interval_sec * 1000});
+            
+            setInterval(() => {{
+                slides[currentIndex].style.opacity = '0';
+                if (dots[currentIndex]) dots[currentIndex].style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                
+                currentIndex = (currentIndex + 1) % slides.length;
+                
+                slides[currentIndex].style.opacity = '1';
+                if (dots[currentIndex]) dots[currentIndex].style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+            }}, {interval_sec * 1000});
         }})();
     </script>
     """
     components.html(carousel_html, height=height + 10)
 
-# Initialize Session State Variables for Dialog Management
+# Session State Setup
 if "selected_product" not in st.session_state:
     st.session_state.selected_product = None
 
@@ -260,8 +277,6 @@ if "pending_uploaded_files" not in st.session_state:
 # -----------------------------------------------------------------------------
 # Dialog Windows
 # -----------------------------------------------------------------------------
-
-# Step 2: Order Confirmation Dialog
 @st.dialog("Confirm Order?")
 def show_confirmation_dialog():
     order_data = st.session_state.pending_order_data
@@ -292,7 +307,6 @@ def show_confirmation_dialog():
             else:
                 st.error(f"Failed to deliver order to Discord. Error: {result}")
             
-            # Reset state
             st.session_state.pending_order_data = None
             st.session_state.pending_uploaded_files = None
             st.session_state.selected_product = None
@@ -304,7 +318,6 @@ def show_confirmation_dialog():
             st.session_state.pending_uploaded_files = None
             st.rerun()
 
-# Step 1: Product Selection & Order Modal
 if st.session_state.selected_product is not None and st.session_state.pending_order_data is None:
     prod = st.session_state.selected_product
     
@@ -381,7 +394,6 @@ if st.session_state.selected_product is not None and st.session_state.pending_or
 
     show_order_modal()
 
-# Display confirmation dialog if an order is pending
 if st.session_state.pending_order_data is not None:
     show_confirmation_dialog()
 
