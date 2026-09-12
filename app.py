@@ -10,361 +10,72 @@ import os
 # Configuration & Global Styling
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Resins by R",
+    page_title="Resins By R",
     page_icon="❤️",
     layout="wide"
 )
 
-# 1. INTRO SPLASH ANIMATION (Injected directly into window.parent.document)
-components.html("""
-<script>
-(function() {
-    const parentDoc = window.parent.document;
-    
-    // Prevent duplicate splash injection on app rerun
-    if (parentDoc.getElementById('splash-overlay-container')) return;
-
-    // Inject CSS into top-level document head
-    const styleEl = parentDoc.createElement('style');
-    styleEl.innerHTML = `
-        #splash-overlay-container {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            background: linear-gradient(135deg, #1a000d 0%, #3d0017 50%, #1a000d 100%) !important;
-            z-index: 9999999 !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            align-items: center !important;
-            overflow: hidden !important;
-            animation: fadeOutSplash 0.8s ease-in-out forwards !important;
-            animation-delay: 3.8s !important;
-            pointer-events: all !important;
-        }
-
-        .droplet-wrapper {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .droplet {
-            position: absolute;
-            width: 45px;
-            height: 45px;
-            background: radial-gradient(circle at 30% 30%, #ff66a3, #e91e63, #800020);
-            border-radius: 50% 50% 50% 0;
-            box-shadow: 0 0 20px rgba(233, 30, 99, 0.8), inset -2px -2px 6px rgba(0,0,0,0.4);
-        }
-
-        .droplet-left {
-            left: -300px;
-            transform: rotate(-45deg);
-            animation: mergeLeft 1.2s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
-        }
-
-        .droplet-right {
-            right: -300px;
-            transform: rotate(135deg);
-            animation: mergeRight 1.2s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
-        }
-
-        .splash-ring {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            border: 4px solid #ff66a3;
-            opacity: 0;
-            animation: splashExpand 0.6s ease-out forwards;
-            animation-delay: 1.2s;
-        }
-
-        .logo-r {
-            font-family: 'Playfair Display', 'Georgia', serif;
-            font-size: 80px;
-            font-weight: 900;
-            color: #ffffff;
-            text-shadow: 0 0 25px #ff66a3, 0 0 50px #e91e63;
-            opacity: 0;
-            transform: scale(0.2);
-            animation: logoAppear 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-            animation-delay: 1.35s;
-        }
-
-        .brand-title {
-            font-family: 'Poppins', 'Segoe UI', sans-serif;
-            font-size: 32px;
-            font-weight: 700;
-            letter-spacing: 4px;
-            color: #ffffff;
-            margin-top: 25px;
-            opacity: 0;
-            transform: translateY(20px);
-            animation: titleSlideUp 0.8s ease-out forwards;
-            animation-delay: 1.8s;
-            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-        }
-
-        @keyframes mergeLeft {
-            0% { left: -300px; }
-            100% { left: calc(50% - 22px); }
-        }
-
-        @keyframes mergeRight {
-            0% { right: -300px; }
-            100% { right: calc(50% - 22px); }
-        }
-
-        @keyframes splashExpand {
-            0% { width: 10px; height: 10px; opacity: 1; border-width: 8px; }
-            100% { width: 180px; height: 180px; opacity: 0; border-width: 1px; }
-        }
-
-        @keyframes logoAppear {
-            0% { opacity: 0; transform: scale(0.2) rotate(-10deg); }
-            100% { opacity: 1; transform: scale(1) rotate(0deg); }
-        }
-
-        @keyframes titleSlideUp {
-            0% { opacity: 0; transform: translateY(20px); }
-            100% { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes fadeOutSplash {
-            0% { opacity: 1; visibility: visible; }
-            100% { opacity: 0; visibility: hidden; }
-        }
-    `;
-    parentDoc.head.appendChild(styleEl);
-
-    // Create Splash Overlay Element
-    const splashDiv = parentDoc.createElement('div');
-    splashDiv.id = 'splash-overlay-container';
-    splashDiv.innerHTML = `
-        <div class="droplet-wrapper">
-            <div class="droplet droplet-left"></div>
-            <div class="droplet droplet-right"></div>
-            <div class="splash-ring"></div>
-            <div class="logo-r">R</div>
-        </div>
-        <div class="brand-title">Resins by R</div>
-    `;
-    parentDoc.body.appendChild(splashDiv);
-
-    // Auto cleanup from DOM after animation completes
-    setTimeout(() => {
-        if (splashDiv) splashDiv.remove();
-    }, 4600);
-})();
-</script>
-""", height=0, width=0)
-
-# 2. GLOBAL CSS STYLING
 st.markdown("""
 <style>
-    #MainMenu,
-    footer,
-    [data-testid="stStatusWidget"],
-    [data-testid="manage-app-button"],
-    .stDeployButton,
-    [data-testid="stDecoration"],
-    [data-testid="stHeaderActionElements"] {
+    #MainMenu, footer, [data-testid="stStatusWidget"], [data-testid="manage-app-button"],
+    .stDeployButton, [data-testid="stDecoration"], [data-testid="stHeaderActionElements"] {
         display: none !important;
         visibility: hidden !important;
     }
-
-    header[data-testid="stHeader"] {
-        background: transparent !important;
-        z-index: 99990 !important;
+    header[data-testid="stHeader"] { background: transparent !important; z-index: 99990 !important; }
+    [data-testid="stSidebarCollapseButton"], [data-testid="collapsedControl"], header[data-testid="stHeader"] button {
+        display: flex !important; visibility: visible !important; opacity: 1 !important;
+        color: #ffffff !important; background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(8px) !important; border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 8px !important; z-index: 99999 !important; margin-left: 8px !important; margin-top: 4px !important;
     }
-
-    [data-testid="stSidebarCollapseButton"],
-    [data-testid="collapsedControl"],
-    header[data-testid="stHeader"] button {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        color: #ffffff !important;
-        background: rgba(255, 255, 255, 0.15) !important;
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        border-radius: 8px !important;
-        z-index: 99999 !important;
-        margin-left: 8px !important;
-        margin-top: 4px !important;
+    [data-testid="stSidebarCollapseButton"] svg, [data-testid="collapsedControl"] svg, header[data-testid="stHeader"] button svg {
+        fill: #ffffff !important; stroke: #ffffff !important; color: #ffffff !important;
     }
-
-    [data-testid="stSidebarCollapseButton"] svg,
-    [data-testid="collapsedControl"] svg,
-    header[data-testid="stHeader"] button svg {
-        fill: #ffffff !important;
-        stroke: #ffffff !important;
-        color: #ffffff !important;
-    }
-
-    [data-testid="stAppViewContainer"] {
-        background: transparent !important;
-    }
-
+    [data-testid="stAppViewContainer"] { background: transparent !important; }
     [data-testid="stAppViewContainer"]::before {
-        content: "";
-        position: fixed;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        z-index: -99999;
-        background: linear-gradient(
-            135deg, 
-            #1a000d 0%, 
-            #5a0022 20%, 
-            #990033 40%, 
-            #2b021d 60%, 
-            #800020 80%, 
-            #4a001e 100%
-        );
-        animation: diagonalMove 12s linear infinite alternate;
-        pointer-events: none;
+        content: ""; position: fixed; top: -50%; left: -50%; width: 200%; height: 200%; z-index: -99999;
+        background: linear-gradient(135deg, #1a000d 0%, #5a0022 20%, #990033 40%, #2b021d 60%, #800020 80%, #4a001e 100%);
+        animation: diagonalMove 12s linear infinite alternate; pointer-events: none;
     }
-
-    @keyframes diagonalMove {
-        0% { transform: translate(0, 0); }
-        100% { transform: translate(-25%, -25%); }
-    }
-
-    .stApp {
-        background: transparent !important;
-        color: #ffffff !important;
-    }
-
+    @keyframes diagonalMove { 0% { transform: translate(0, 0); } 100% { transform: translate(-25%, -25%); } }
+    .stApp { background: transparent !important; color: #ffffff !important; }
     div[data-testid="stVerticalBlock"] > div[style*="flex"] {
-        background: rgba(255, 255, 255, 0.07) !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
-        border-radius: 16px !important;
-        padding: 1rem !important;
+        background: rgba(255, 255, 255, 0.07) !important; backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important; border-radius: 16px !important; padding: 1rem !important;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
     }
-
     .stButton > button {
-        background: rgba(255, 255, 255, 0.12) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        color: #ffffff !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+        background: rgba(255, 255, 255, 0.12) !important; backdrop-filter: blur(10px) !important;
+        color: #ffffff !important; border: 1px solid rgba(255, 255, 255, 0.25) !important; border-radius: 12px !important;
+        font-weight: 600 !important; transition: all 0.3s ease !important; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
     }
-
     .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.25) !important;
-        border-color: rgba(255, 255, 255, 0.5) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4) !important;
+        background: rgba(255, 255, 255, 0.25) !important; border-color: rgba(255, 255, 255, 0.5) !important;
+        transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4) !important;
     }
-
     section[data-testid="stSidebar"] {
-        background: rgba(30, 0, 15, 0.85) !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
+        background: rgba(30, 0, 15, 0.85) !important; backdrop-filter: blur(16px) !important;
         border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
-
     div[role="dialog"] {
-        background: rgba(35, 2, 20, 0.85) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        border-radius: 20px !important;
-        color: #ffffff !important;
+        background: rgba(35, 2, 20, 0.85) !important; backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important; border-radius: 20px !important; color: #ffffff !important;
     }
-
     .stTextInput > div > div > input, .stTextArea > div > div > textarea, .stSelectbox > div > div {
-        background: rgba(255, 255, 255, 0.08) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
-        color: #ffffff !important;
-        border-radius: 10px !important;
+        background: rgba(255, 255, 255, 0.08) !important; border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        color: #ffffff !important; border-radius: 10px !important;
     }
-
-    div[data-testid="stFeedback"] button {
-        transform: scale(1.3);
-        margin-right: 8px;
-    }
-
-    .scroll-target {
-        opacity: 0;
-        transform: translateY(40px);
-        transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-        will-change: opacity, transform;
-    }
-
-    .scroll-target.in-view {
-        opacity: 1;
-        transform: translateY(0px);
-    }
+    div[data-testid="stFeedback"] button { transform: scale(1.3); margin-right: 8px; }
+    .scroll-target { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1); will-change: opacity, transform; }
+    .scroll-target.in-view { opacity: 1; transform: translateY(0px); }
 </style>
 """, unsafe_allow_html=True)
 
-# Intersection Observer for Scroll Effects
-components.html("""
-<script>
-    function setupScrollObserver() {
-        const parentDoc = window.parent.document;
-        const mainContainer = parentDoc.querySelector('section.main') || parentDoc.querySelector('[data-testid="stMain"]');
-        if (!mainContainer) return;
-
-        const selectors = [
-            'div[data-testid="stVerticalBlock"] > div',
-            'div[data-testid="stMarkdownContainer"]',
-            'div[data-testid="column"]',
-            'form'
-        ];
-        
-        const elementsToObserve = mainContainer.querySelectorAll(selectors.join(', '));
-
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px 0px -40px 0px',
-            threshold: 0.12
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('in-view');
-                } else {
-                    entry.target.classList.remove('in-view');
-                }
-            });
-        }, observerOptions);
-
-        elementsToObserve.forEach(el => {
-            if (!el.classList.contains('scroll-target')) {
-                el.classList.add('scroll-target');
-            }
-            observer.observe(el);
-        });
-    }
-
-    setTimeout(setupScrollObserver, 300);
-    setInterval(setupScrollObserver, 1500);
-</script>
-""", height=0, width=0)
-
-# Telegram Credentials
-TELEGRAM_BOT_TOKEN = "8644129117:AAG3CJ4xJVteiTmwuImnTQz5PXWFvhfqPLs"
-TELEGRAM_CHAT_IDS = ["6359572760", "8675071152"]
+# -----------------------------------------------------------------------------
+# Confidential Discord Webhook Configuration (Loaded via Secrets)
+# -----------------------------------------------------------------------------
+DISCORD_WEBHOOK_URL = st.secrets.get("DISCORD_WEBHOOK_URL", "")
 
 # Product Inventory
 PRODUCTS = [
@@ -406,79 +117,63 @@ PRODUCTS = [
 ]
 
 # -----------------------------------------------------------------------------
-# Helper Functions
+# Helper Functions for Discord Integration
 # -----------------------------------------------------------------------------
 def generate_order_number():
     timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M")
     rand_id = random.randint(100, 999)
     return f"ORD-{timestamp}-{rand_id}"
 
-def send_telegram_message(message_text):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    all_success = True
-    error_messages = []
+def send_discord_message(content=None, embed=None, uploaded_files=None):
+    if not DISCORD_WEBHOOK_URL:
+        return False, "Discord Webhook URL is missing from Streamlit secrets."
 
-    for chat_id in TELEGRAM_CHAT_IDS:
-        payload = {
-            "chat_id": chat_id,
-            "text": message_text,
-            "parse_mode": "Markdown"
-        }
-        try:
-            res = requests.post(url, json=payload, timeout=5)
-            if res.status_code != 200:
-                all_success = False
-                error_messages.append(f"Chat ID {chat_id}: {res.text}")
-        except Exception as e:
-            all_success = False
-            error_messages.append(f"Chat ID {chat_id}: {str(e)}")
+    payload = {}
+    if content:
+        payload["content"] = content
+    if embed:
+        payload["embeds"] = [embed]
 
-    if all_success:
-        return True, "Success"
-    else:
-        return False, " | ".join(error_messages)
+    files_dict = {}
+    if uploaded_files:
+        for idx, f in enumerate(uploaded_files):
+            f.seek(0)
+            files_dict[f"file{idx}"] = (f.name, f.getvalue(), f.type)
 
-def send_telegram_photo(file_bytes, caption):
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendPhoto"
-    for chat_id in TELEGRAM_CHAT_IDS:
-        files = {'photo': file_bytes}
-        data = {'chat_id': chat_id, 'caption': caption, 'parse_mode': 'Markdown'}
-        try:
-            requests.post(url, data=data, files=files, timeout=10)
-        except Exception:
-            pass
+    try:
+        if files_dict:
+            res = requests.post(DISCORD_WEBHOOK_URL, data={"payload_json": requests.compat.json.dumps(payload)}, files=files_dict, timeout=10)
+        else:
+            res = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=10)
+        
+        if res.status_code in [200, 204]:
+            return True, "Success"
+        else:
+            return False, f"Discord HTTP Error: {res.status_code} - {res.text}"
+    except Exception as e:
+        return False, str(e)
 
-def send_telegram_order(order_data, uploaded_files=None):
-    add_pic_str = "Yes (+PKR 100)" if order_data.get('add_pictures') else "No"
+def send_discord_order(order_data, uploaded_files=None):
+    add_pic_str = "Yes (+PKR 100/-)" if order_data.get('add_pictures') else "No"
     
-    message_text = (
-        f"🛒 *NEW ORDER RECEIVED*\n"
-        f"-------------------------------\n"
-        f"*Order No:* `{order_data['order_no']}`\n"
-        f"*Product:* {order_data['product_name']}\n"
-        f"*Quantity:* {order_data['quantity']}\n"
-        f"*Picture Customization:* {add_pic_str}\n"
-        f"*Total Price:* PKR {order_data['total_price']:,}\n\n"
-        f"💳 *PAYMENT INFO*\n"
-        f"*Payment Method:* Online Payment (JazzCash)\n"
-        f"*Transaction ID / Reference:* `{order_data['transaction_id']}`\n\n"
-        f"👤 *CUSTOMER DETAILS*\n"
-        f"*Name:* {order_data['customer_name']}\n"
-        f"*Phone:* {order_data['customer_phone']}\n"
-        f"*Address:* {order_data['customer_address']}\n"
-        f"*Customization/Notes:* {order_data['customer_notes'] or 'None'}\n"
-        f"-------------------------------"
-    )
+    embed = {
+        "title": f"🛒 New Order: {order_data['order_no']}",
+        "color": 0xE91E63,
+        "fields": [
+            {"name": "Product", "value": order_data['product_name'], "inline": True},
+            {"name": "Quantity", "value": str(order_data['quantity']), "inline": True},
+            {"name": "Picture Customization", "value": add_pic_str, "inline": True},
+            {"name": "Total Price", "value": f"PKR {order_data['total_price']:,}/-", "inline": True},
+            {"name": "Transaction ID (TID)", "value": f"`{order_data['transaction_id']}`", "inline": True},
+            {"name": "Customer Name", "value": order_data['customer_name'], "inline": False},
+            {"name": "Phone Number", "value": order_data['customer_phone'], "inline": True},
+            {"name": "Delivery Address", "value": order_data['customer_address'], "inline": False},
+            {"name": "Customization / Notes", "value": order_data['customer_notes'] or "None", "inline": False}
+        ],
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat()
+    }
     
-    success, res_str = send_telegram_message(message_text)
-    
-    if success and uploaded_files:
-        for idx, file in enumerate(uploaded_files, 1):
-            file.seek(0)
-            photo_caption = f"*Order Photo {idx}/{len(uploaded_files)}* for Order `{order_data['order_no']}`"
-            send_telegram_photo(file.getvalue(), photo_caption)
-
-    return success, res_str
+    return send_discord_message(embed=embed, uploaded_files=uploaded_files)
 
 def trigger_side_party_poppers():
     confetti_html = """
@@ -486,16 +181,11 @@ def trigger_side_party_poppers():
     <script>
         var count = 200;
         var defaults = { origin: { y: 0.7 } };
-
         function fire(particleRatio, opts) {
-          confetti(Object.assign({}, defaults, opts, {
-            particleCount: Math.floor(count * particleRatio)
-          }));
+          confetti(Object.assign({}, defaults, opts, { particleCount: Math.floor(count * particleRatio) }));
         }
-
         fire(0.25, { spread: 26, startVelocity: 55, origin: { x: 0, y: 0.8 } });
         fire(0.2, { spread: 60, origin: { x: 0, y: 0.8 } });
-        
         fire(0.25, { spread: 26, startVelocity: 55, origin: { x: 1, y: 0.8 } });
         fire(0.2, { spread: 60, origin: { x: 1, y: 0.8 } });
     </script>
@@ -511,15 +201,12 @@ def get_base64_image(image_path):
 
 def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
     img_html_elements = []
-    
     for idx, path in enumerate(image_paths):
         b64_str = get_base64_image(path)
         if b64_str:
             active_class = " active" if idx == 0 else ""
             img_html_elements.append(
-                f'<div class="slide{active_class}" style="'
-                f'position: absolute; top: 0; left: 0; width: 100%; height: 100%; '
-                f'opacity: 0; transition: opacity 1s ease-in-out; pointer-events: none; border-radius: 12px;">'
+                f'<div class="slide{active_class}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; transition: opacity 1s ease-in-out; pointer-events: none; border-radius: 12px;">'
                 f'<img src="{b64_str}" style="width: 100%; height: {height}px; object-fit: cover; border-radius: 12px;">'
                 f'</div>'
             )
@@ -529,57 +216,24 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
         return
 
     unique_id = f"carousel_{random.randint(1000, 9999)}"
-    
-    dots_html = "".join([
-        f'<span class="dot{" active" if i == 0 else ""}" data-index="{i}" style="'
-        f'height: 10px; width: 10px; margin: 0 4px; background-color: rgba(255, 255, 255, 0.4); '
-        f'border-radius: 50%; display: inline-block; cursor: pointer; transition: all 0.3s ease;"></span>'
-        for i in range(len(img_html_elements))
-    ])
+    dots_html = "".join([f'<span class="dot{" active" if i == 0 else ""}" data-index="{i}" style="height: 10px; width: 10px; margin: 0 4px; background-color: rgba(255, 255, 255, 0.4); border-radius: 50%; display: inline-block; cursor: pointer; transition: all 0.3s ease;"></span>' for i in range(len(img_html_elements))])
 
     carousel_html = f"""
-    <div id="{unique_id}_container" style="
-        position: relative;
-        width: 100%;
-        height: {height}px;
-        border-radius: 12px;
-        overflow: hidden;
-    ">
+    <div id="{unique_id}_container" style="position: relative; width: 100%; height: {height}px; border-radius: 12px; overflow: hidden;">
         {''.join(img_html_elements)}
-        <div style="
-            position: absolute;
-            bottom: 12px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        ">
+        <div style="position: absolute; bottom: 12px; width: 100%; display: flex; justify-content: center; align-items: center; z-index: 10;">
             {dots_html}
         </div>
     </div>
-    <style>
-        #{unique_id}_container .slide.active {{
-            opacity: 1 !important;
-            pointer-events: auto !important;
-        }}
-        #{unique_id}_container .dot.active {{
-            background-color: #ffffff !important;
-            transform: scale(1.3);
-        }}
-    </style>
     <script>
         (function() {{
             const container = document.getElementById('{unique_id}_container');
             if (!container) return;
             const slides = container.getElementsByClassName('slide');
             const dots = container.getElementsByClassName('dot');
-            const totalSlides = slides.length;
             let currentIndex = 0;
-            let timer = null;
-
             function showSlide(index) {{
-                for (let i = 0; i < totalSlides; i++) {{
+                for (let i = 0; i < slides.length; i++) {{
                     slides[i].classList.remove('active');
                     if (dots[i]) dots[i].classList.remove('active');
                 }}
@@ -587,31 +241,7 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
                 slides[currentIndex].classList.add('active');
                 if (dots[currentIndex]) dots[currentIndex].classList.add('active');
             }}
-
-            function nextSlide() {{
-                let next = (currentIndex + 1) % totalSlides;
-                showSlide(next);
-            }}
-
-            function startTimer() {{
-                if (totalSlides > 1) {{
-                    timer = setInterval(nextSlide, {interval_sec * 1000});
-                }}
-            }}
-
-            function resetTimer() {{
-                if (timer) clearInterval(timer);
-                startTimer();
-            }}
-
-            for (let i = 0; i < dots.length; i++) {{
-                dots[i].addEventListener('click', function() {{
-                    showSlide(i);
-                    resetTimer();
-                }});
-            }}
-
-            startTimer();
+            setInterval(() => {{ showSlide((currentIndex + 1) % slides.length); }}, {interval_sec * 1000});
         }})();
     </script>
     """
@@ -620,20 +250,18 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
-st.title("Resins by R")
+st.title("Resins By R")
 st.write("Browse products and place orders instantly.")
 
 # Sidebar Filters
 st.sidebar.header("Filter Products")
 categories = ["All"] + sorted(list(set(p["category"] for p in PRODUCTS)))
 selected_category = st.sidebar.selectbox("Select Category", categories)
-
 st.sidebar.divider()
 st.sidebar.caption("**Web Developer:** 0314-4012872")
 
 filtered_products = PRODUCTS if selected_category == "All" else [p for p in PRODUCTS if p["category"] == selected_category]
 
-# Session State
 if "selected_product" not in st.session_state:
     st.session_state.selected_product = None
 
@@ -642,12 +270,10 @@ for idx, product in enumerate(filtered_products):
     col = cols[idx % 3]
     with col:
         render_auto_sliding_carousel(product["images"], height=320, interval_sec=4.5)
-            
         st.subheader(product["name"])
         st.write(f"**Category:** {product['category']}")
         st.write(product["description"])
         st.write(f"**Price:** PKR {product['price']:,}/-")
-        
         if st.button("Order Now", key=f"btn_{product['id']}"):
             st.session_state.selected_product = product
 
@@ -658,21 +284,13 @@ if st.session_state.selected_product is not None:
     @st.dialog(f"Order: {prod['name']}")
     def show_order_modal():
         render_auto_sliding_carousel(prod["images"], height=280, interval_sec=4)
-            
         st.subheader(prod["name"])
         st.write(f"**Category:** {prod['category']}")
         st.write(f"**Description:** {prod['description']}")
         st.write(f"**Base Price:** PKR {prod['price']:,}/-")
-        
         st.divider()
         
-        quantity = st.number_input(
-            "Quantity", 
-            min_value=1, 
-            max_value=50, 
-            value=1, 
-            key=f"qty_input_{prod['id']}"
-        )
+        quantity = st.number_input("Quantity", min_value=1, max_value=50, value=1, key=f"qty_input_{prod['id']}")
         
         add_pictures = False
         uploaded_photos = None
@@ -682,29 +300,17 @@ if st.session_state.selected_product is not None:
             add_pictures = st.checkbox("Add pictures (+ PKR 100/-)", key=f"pic_chk_{prod['id']}")
             if add_pictures:
                 picture_extra_cost = 100
-                uploaded_photos = st.file_uploader(
-                    "➕ Upload pictures (Max 3)", 
-                    type=["jpg", "jpeg", "png", "webp"], 
-                    accept_multiple_files=True,
-                    key=f"shield_pics_{prod['id']}"
-                )
+                uploaded_photos = st.file_uploader("➕ Upload pictures (Max 3)", type=["jpg", "jpeg", "png", "webp"], accept_multiple_files=True, key=f"shield_pics_{prod['id']}")
                 if uploaded_photos and len(uploaded_photos) > 3:
-                    st.warning("Maximum 3 pictures allowed. Only the first 3 will be processed.")
+                    st.warning("⚠️ Maximum 3 pictures allowed. Only the first 3 will be processed.")
                     uploaded_photos = uploaded_photos[:3]
 
         unit_price = prod["price"] + picture_extra_cost
         total_price = quantity * unit_price
         
         st.info(f"Total Amount: **PKR {total_price:,}/-**")
-        
         st.write("### Payment Method")
-        st.success(
-            "**JazzCash Payment Details**\n\n"
-            "• **Account Number:** `0305-8866692`\n\n"
-            "• **Account Name:** Rimsha Fatima\n\n"
-            "Please send the total amount to the JazzCash account above and enter your Transaction ID (TID) below."
-        )
-
+        st.success("**JazzCash Payment Details**\n\n• **Account Number:** `0305-8866692`\n\n• **Account Name:** Rimsha Fatima\n\nPlease send the total amount to the JazzCash account above and enter your Transaction ID (TID) below.")
         st.divider()
         
         with st.form("checkout_form"):
@@ -718,16 +324,11 @@ if st.session_state.selected_product is not None:
             
             if submitted:
                 missing_fields = []
-                if not transaction_id.strip():
-                    missing_fields.append("Transaction ID (TID)")
-                if not customer_name.strip():
-                    missing_fields.append("Full Name")
-                if not customer_phone.strip():
-                    missing_fields.append("Phone Number")
-                if not customer_address.strip():
-                    missing_fields.append("Delivery Address")
-                if add_pictures and not uploaded_photos:
-                    missing_fields.append("Uploaded Pictures (Since 'Add pictures' was checked)")
+                if not transaction_id.strip(): missing_fields.append("Transaction ID (TID)")
+                if not customer_name.strip(): missing_fields.append("Full Name")
+                if not customer_phone.strip(): missing_fields.append("Phone Number")
+                if not customer_address.strip(): missing_fields.append("Delivery Address")
+                if add_pictures and not uploaded_photos: missing_fields.append("Uploaded Pictures")
 
                 if missing_fields:
                     st.error(f"Please fill in all required fields: {', '.join(missing_fields)}.")
@@ -745,20 +346,15 @@ if st.session_state.selected_product is not None:
                         "customer_notes": customer_notes
                     }
                     
-                    with st.spinner("Processing order & uploading image assets..."):
-                        success, result = send_telegram_order(order_data, uploaded_files=uploaded_photos)
+                    with st.spinner("Sending order to Discord..."):
+                        success, result = send_discord_order(order_data, uploaded_files=uploaded_photos)
                     
                     if success:
                         st.success(f"🎉 Thank you, {customer_name}! Your order #{order_data['order_no']} has been placed successfully.")
                         trigger_side_party_poppers()
                     else:
-                        st.error(f"Failed to deliver order message to Telegram. Error: {result}")
+                        st.error(f"Failed to deliver order to Discord. Error: {result}")
 
-        st.markdown(
-            "*For further order details, contact on "
-            "[+92 305-8866692](https://wa.me/923058866692) through WhatsApp.*"
-        )
-        
         if st.button("Close"):
             st.session_state.selected_product = None
             st.rerun()
@@ -766,75 +362,49 @@ if st.session_state.selected_product is not None:
     show_order_modal()
 
 # -----------------------------------------------------------------------------
-# Bottom Interactive Sections
+# Reviews & Opinions
 # -----------------------------------------------------------------------------
 st.divider()
-
 st.subheader("Leave a Review")
-
 star_rating_index = st.feedback("stars")
 
 with st.form("client_review_form"):
     review_text = st.text_area("How was your experience:", placeholder="Write your experience with Resins By R...")
-    review_submitted = st.form_submit_button("Submit Review")
-
-    if review_submitted:
-        if star_rating_index is None:
-            st.error("Please click on the stars above to select a star rating!")
-        elif not review_text.strip():
-            st.error("Please fill in 'How was your experience:' before submitting.")
+    if st.form_submit_button("Submit Review"):
+        if star_rating_index is None or not review_text.strip():
+            st.error("Please fill in both the rating and review text.")
         else:
             rating_val = star_rating_index + 1
-            stars_visual = f"{'★' * rating_val}{'☆' * (5 - rating_val)}"
-            
-            telegram_msg = (
-                f"⭐ *NEW CLIENT REVIEW*\n"
-                f"-------------------------------\n"
-                f"*Rating:* {rating_val} / 5 Stars ({stars_visual})\n"
-                f"*Experience:* {review_text.strip()}\n"
-                f"-------------------------------"
-            )
-            with st.spinner("Submitting review..."):
-                ok, err = send_telegram_message(telegram_msg)
+            embed = {
+                "title": "⭐ New Client Review",
+                "color": 0xFFD700,
+                "fields": [
+                    {"name": "Rating", "value": f"{rating_val} / 5 Stars", "inline": True},
+                    {"name": "Experience", "value": review_text.strip(), "inline": False}
+                ]
+            }
+            ok, err = send_discord_message(embed=embed)
             if ok:
                 st.success("Thank you for submitting your review!")
             else:
-                st.error(f"Could not submit review. Error: {err}")
+                st.error(f"Error: {err}")
 
 st.divider()
-
-st.markdown(
-    '**"Resins by R"** is a brand worth to be trusted and attended, as it opts the '
-    '"quality over quantity" fact, making the clients to trust with all their heart. '
-    'We do NOT ignore the service demands of our clients, and ensure all the details '
-    'are kept in check, building the pure-trust relation with the clients, instead '
-    'of just developing a "Buyer-Seller" sense. We do all our best to keep the clients '
-    'satisfied and comfortable with our purchases.\n\n'
-    'But still, if you think we can serve you better than we are, your opinion is of '
-    'great importance for us.\n\n'
-    '*(Resins By R)\'s Development team.*'
-)
-
 with st.form("client_opinion_form"):
-    opinion_text = st.text_area("Your opinion:", placeholder="Share your suggestions or opinion with us...")
-    opinion_submitted = st.form_submit_button("Submit Opinion")
-
-    if opinion_submitted:
+    opinion_text = st.text_area("Your opinion:", placeholder="Share your suggestions...")
+    if st.form_submit_button("Submit Opinion"):
         if not opinion_text.strip():
-            st.error("Please enter your opinion before submitting.")
+            st.error("Please enter your opinion.")
         else:
-            telegram_msg = (
-                f"💡 *NEW CLIENT OPINION*\n"
-                f"-------------------------------\n"
-                f"*Opinion:* {opinion_text.strip()}\n"
-                f"-------------------------------"
-            )
-            with st.spinner("Submitting opinion..."):
-                ok, err = send_telegram_message(telegram_msg)
+            embed = {
+                "title": "💡 New Client Opinion",
+                "color": 0x3498DB,
+                "fields": [{"name": "Opinion", "value": opinion_text.strip(), "inline": False}]
+            }
+            ok, err = send_discord_message(embed=embed)
             if ok:
-                st.success("Thank you for sharing your valuable opinion with us!")
+                st.success("Thank you for sharing your opinion!")
             else:
-                st.error(f"Could not submit opinion. Error: {err}")
+                st.error(f"Error: {err}")
 
-st.divider()
 st.caption("Web Developer: 0314-4012872")
