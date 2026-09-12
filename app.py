@@ -33,7 +33,7 @@ components.html("""
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            background: linear-gradient(135deg, #1a000d 0%, #3d0017 50%, #1a000d 100%) !important;
+            background: linear-gradient(135deg, #0a041f 0%, #170938 50%, #0a041f 100%) !important;
             z-index: 9999999 !important;
             display: flex !important;
             flex-direction: column !important;
@@ -58,9 +58,9 @@ components.html("""
             position: absolute;
             width: 45px;
             height: 45px;
-            background: radial-gradient(circle at 30% 30%, #ff66a3, #e91e63, #800020);
+            background: radial-gradient(circle at 30% 30%, #FF9FFC, #5227FF);
             border-radius: 50% 50% 50% 0;
-            box-shadow: 0 0 20px rgba(233, 30, 99, 0.8), inset -2px -2px 6px rgba(0,0,0,0.4);
+            box-shadow: 0 0 20px rgba(255, 159, 252, 0.8), inset -2px -2px 6px rgba(0,0,0,0.4);
         }
 
         .droplet-left {
@@ -80,7 +80,7 @@ components.html("""
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            border: 4px solid #ff66a3;
+            border: 4px solid #FF9FFC;
             opacity: 0;
             animation: splashExpand 0.6s ease-out forwards;
             animation-delay: 1.2s;
@@ -91,7 +91,7 @@ components.html("""
             font-size: 80px;
             font-weight: 900;
             color: #ffffff;
-            text-shadow: 0 0 25px #ff66a3, 0 0 50px #e91e63;
+            text-shadow: 0 0 25px #FF9FFC, 0 0 50px #5227FF;
             opacity: 0;
             transform: scale(0.2);
             animation: logoAppear 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -166,7 +166,7 @@ components.html("""
 </script>
 """, height=0, width=0)
 
-# 2. GLOBAL CSS STYLING
+# 2. GLOBAL CSS STYLING WITH LIGHTPILLAR BACKGROUND IMPLEMENTATION
 st.markdown("""
 <style>
     #MainMenu,
@@ -211,33 +211,60 @@ st.markdown("""
     }
 
     [data-testid="stAppViewContainer"] {
-        background: transparent !important;
+        background: #08031a !important;
     }
 
+    /* Base Ambient Background Glow */
     [data-testid="stAppViewContainer"]::before {
         content: "";
         position: fixed;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
         z-index: -99999;
-        background: linear-gradient(
-            135deg, 
-            #1a000d 0%, 
-            #5a0022 20%, 
-            #990033 40%, 
-            #2b021d 60%, 
-            #800020 80%, 
-            #4a001e 100%
-        );
-        animation: diagonalMove 12s linear infinite alternate;
+        background: radial-gradient(circle at 50% 50%, rgba(82, 39, 255, 0.25) 0%, rgba(255, 159, 252, 0.12) 50%, rgba(8, 3, 26, 1) 100%);
         pointer-events: none;
     }
 
-    @keyframes diagonalMove {
-        0% { transform: translate(0, 0); }
-        100% { transform: translate(-25%, -25%); }
+    /* LightPillar Beam Layer */
+    [data-testid="stAppViewContainer"]::after {
+        content: "";
+        position: fixed;
+        top: -50vh;
+        left: 20vw;
+        width: 60vw;
+        height: 200vh;
+        z-index: -99998;
+        background: linear-gradient(180deg, 
+            rgba(82, 39, 255, 0) 0%, 
+            rgba(82, 39, 255, 0.85) 30%, 
+            rgba(255, 159, 252, 0.85) 70%, 
+            rgba(255, 159, 252, 0) 100%
+        );
+        filter: blur(60px);
+        mix-blend-mode: screen;
+        transform: rotate(25deg);
+        animation: pillarPulse 6s ease-in-out infinite alternate;
+        pointer-events: none;
+    }
+
+    @keyframes pillarPulse {
+        0% {
+            opacity: 0.7;
+            transform: rotate(23deg) scaleX(0.85);
+            filter: blur(50px);
+        }
+        50% {
+            opacity: 1;
+            transform: rotate(25deg) scaleX(1.1);
+            filter: blur(70px);
+        }
+        100% {
+            opacity: 0.8;
+            transform: rotate(27deg) scaleX(0.95);
+            filter: blur(55px);
+        }
     }
 
     .stApp {
@@ -247,20 +274,20 @@ st.markdown("""
 
     div[data-testid="stVerticalBlock"] > div[style*="flex"] {
         background: rgba(255, 255, 255, 0.07) !important;
-        backdrop-filter: blur(12px) !important;
-        -webkit-backdrop-filter: blur(12px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
         border-radius: 16px !important;
         padding: 1rem !important;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
     }
 
     .stButton > button {
-        background: rgba(255, 255, 255, 0.12) !important;
+        background: rgba(255, 255, 255, 0.15) !important;
         backdrop-filter: blur(10px) !important;
         -webkit-backdrop-filter: blur(10px) !important;
         color: #ffffff !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
         border-radius: 12px !important;
         font-weight: 600 !important;
         transition: all 0.3s ease !important;
@@ -268,31 +295,31 @@ st.markdown("""
     }
 
     .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.25) !important;
-        border-color: rgba(255, 255, 255, 0.5) !important;
+        background: rgba(255, 255, 255, 0.3) !important;
+        border-color: rgba(255, 255, 255, 0.6) !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4) !important;
+        box-shadow: 0 6px 20px rgba(255, 159, 252, 0.4) !important;
     }
 
     section[data-testid="stSidebar"] {
-        background: rgba(30, 0, 15, 0.85) !important;
+        background: rgba(10, 4, 31, 0.85) !important;
         backdrop-filter: blur(16px) !important;
         -webkit-backdrop-filter: blur(16px) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
     }
 
     div[role="dialog"] {
-        background: rgba(35, 2, 20, 0.85) !important;
+        background: rgba(10, 4, 31, 0.92) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
         border-radius: 20px !important;
         color: #ffffff !important;
     }
 
     .stTextInput > div > div > input, .stTextArea > div > div > textarea, .stSelectbox > div > div {
-        background: rgba(255, 255, 255, 0.08) !important;
-        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
         color: #ffffff !important;
         border-radius: 10px !important;
     }
@@ -421,7 +448,6 @@ def send_discord_message(content=None, embeds=None, files=None):
 
     try:
         if files:
-            # Send multipart form data if image attachments are included
             res = requests.post(DISCORD_WEBHOOK_URL, data={"payload_json": requests.compat.json.dumps(payload)}, files=files, timeout=10)
         else:
             res = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=8)
@@ -438,7 +464,7 @@ def send_discord_order(order_data, uploaded_files=None):
     
     embed = {
         "title": "🛒 NEW ORDER RECEIVED",
-        "color": 15212643,  # Deep Pink / Burgundy Accent
+        "color": 16752572,  # Soft Pink
         "fields": [
             {"name": "Order Number", "value": f"`{order_data['order_no']}`", "inline": True},
             {"name": "Product", "value": order_data['product_name'], "inline": True},
@@ -645,7 +671,7 @@ if st.session_state.selected_product is not None:
     
     @st.dialog(f"Order: {prod['name']}")
     def show_order_modal():
-        # STEP 3: Order Completed View (Display Order ID for copying/screenshotting)
+        # STEP 3: Order Completed View
         if st.session_state.completed_order_id:
             st.success("🎉 Order Placed Successfully!")
             st.subheader("Your Order ID")
@@ -663,7 +689,7 @@ if st.session_state.selected_product is not None:
         # STEP 2: Order Confirmation Dialogue ("Confirm Order?")
         if st.session_state.pending_order is not None:
             order = st.session_state.pending_order
-            st.subheader(" Confirm Order?")
+            st.subheader("Confirm Order?")
             st.write("Please review your order details before final submission:")
             
             st.markdown(f"""
@@ -696,7 +722,7 @@ if st.session_state.selected_product is not None:
                         st.error(f"Failed to submit order to Discord: {result}")
             
             with btn_col2:
-                if st.button(" Cancel", use_container_width=True):
+                if st.button("Cancel", use_container_width=True):
                     st.session_state.pending_order = None
                     st.rerun()
             return
@@ -793,7 +819,7 @@ if st.session_state.selected_product is not None:
                     st.rerun()
 
         st.markdown(
-            " *For further order details, contact on "
+            "*For further order details, contact on "
             "[+92 305-8866692](https://wa.me/923058866692) through WhatsApp.*"
         )
         
@@ -810,7 +836,7 @@ if st.session_state.selected_product is not None:
 # -----------------------------------------------------------------------------
 st.divider()
 
-st.subheader(" Leave a Review")
+st.subheader("Leave a Review")
 
 star_rating_index = st.feedback("stars")
 
@@ -888,7 +914,7 @@ st.divider()
 st.markdown(
     """
     <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF9FFC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
             <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
             <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
