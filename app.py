@@ -10,7 +10,7 @@ import os
 # Configuration & Global Styling
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Resins Store Catalog",
+    page_title="Resins By R",
     page_icon="❤️",
     layout="wide"
 )
