@@ -11,7 +11,7 @@ import mimetypes
 # Configuration & Global Styling
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Resins By R",
+    page_title="Resins-DreamByR",
     page_icon="❤️",
     layout="wide"
 )
@@ -42,20 +42,22 @@ st.markdown("""
     @keyframes diagonalMove { 0% { transform: translate(0, 0); } 100% { transform: translate(-25%, -25%); } }
     .stApp { background: transparent !important; color: #ffffff !important; }
     
-    /* Page Load Container Entry Animation */
-    div[data-testid="stColumn"] > div {
-        background: rgba(255, 255, 255, 0.07) !important; 
-        backdrop-filter: blur(12px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important; 
-        border-radius: 16px !important; 
-        padding: 1rem !important;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
-        animation: fadeInUp 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
+    /* Universal Fade-In-Upward Animations for Columns, Headers, and Dialogs */
+    div[data-testid="stColumn"], 
+    div[data-testid="stVerticalBlock"] > div, 
+    div[role="dialog"] {
+        animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
     }
 
     @keyframes fadeInUp {
-        0% { opacity: 0; transform: translateY(40px); }
-        100% { opacity: 1; transform: translateY(0); }
+        0% {
+            opacity: 0;
+            transform: translateY(35px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .stButton > button {
@@ -80,6 +82,15 @@ st.markdown("""
         color: #ffffff !important; border-radius: 10px !important;
     }
     div[data-testid="stFeedback"] button { transform: scale(1.3); margin-right: 8px; }
+
+    a.wa-link {
+        color: #25D366 !important;
+        text-decoration: none !important;
+        font-weight: bold !important;
+    }
+    a.wa-link:hover {
+        text-decoration: underline !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -314,6 +325,8 @@ def show_confirmation_dialog():
         st.write("**Order Summary (Take a screenshot or copy your Order ID):**")
         st.code(f"Order ID: {order_data['order_no']}\nProduct: {order_data['product_name']}\nQuantity: {order_data['quantity']}\nTotal: PKR {order_data['total_price']:,}/-\nTID: {order_data['transaction_id']}\nName: {order_data['customer_name']}\nPhone: {order_data['customer_phone']}\nAddress: {order_data['customer_address']}")
         st.divider()
+        st.markdown('For further order information, contact on <a href="https://wa.me/923058866692" target="_blank" class="wa-link">+92 305-8866692</a>', unsafe_allow_html=True)
+        st.divider()
         if st.button("Close & Return to Catalog", use_container_width=True):
             st.session_state.pending_order_data = None
             st.session_state.pending_uploaded_files = None
@@ -334,6 +347,8 @@ def show_confirmation_dialog():
     * **Phone:** {order_data['customer_phone']}
     * **Address:** {order_data['customer_address']}
     """)
+    st.divider()
+    st.markdown('For further order information, contact on <a href="https://wa.me/923058866692" target="_blank" class="wa-link">+92 305-8866692</a>', unsafe_allow_html=True)
     st.divider()
 
     col_confirm, col_cancel = st.columns(2)
@@ -387,8 +402,8 @@ if st.session_state.selected_product is not None and st.session_state.pending_or
         total_price = quantity * unit_price
         
         st.info(f"Total Amount: **PKR {total_price:,}/-**")
-        st.write("### Payment Method")
-        st.success("**JazzCash Payment Details**\n\n• **Account Number:** `0305-8866692`\n\n• **Account Name:** Rimsha Fatima\n\nPlease send the total amount to the JazzCash account above and enter your Transaction ID (TID) below.")
+        st.write("### Payment Method & Assistance")
+        st.success("**JazzCash Payment Details**\n\n• **Account Number:** `0305-8866692`\n\n• **Account Name:** Rimsha Fatima\n\n **WhatsApp Assistance:** `0305-8866692`\n\nPlease send the total amount to the JazzCash account above and enter your Transaction ID (TID) below.")
         st.divider()
         
         with st.form("checkout_form"):
@@ -438,7 +453,7 @@ if st.session_state.pending_order_data is not None:
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
-st.title("Resins By R")
+st.title("Resins-DreamByR")
 st.write("Browse products and place orders instantly.")
 
 # Sidebar Filters
@@ -467,7 +482,7 @@ for idx, product in enumerate(filtered_products):
 # Reviews & Opinions
 # -----------------------------------------------------------------------------
 st.divider()
-st.subheader("Leave a Review")
+st.subheader("⭐ Leave a Review")
 star_rating_index = st.feedback("stars")
 
 with st.form("client_review_form"):
