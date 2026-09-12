@@ -42,7 +42,7 @@ st.markdown("""
     @keyframes diagonalMove { 0% { transform: translate(0, 0); } 100% { transform: translate(-25%, -25%); } }
     .stApp { background: transparent !important; color: #ffffff !important; }
     
-    /* Animated Container Cards on Page Load */
+    /* Page Load Container Entry Animation */
     div[data-testid="stColumn"] > div {
         background: rgba(255, 255, 255, 0.07) !important; 
         backdrop-filter: blur(12px) !important;
@@ -50,11 +50,11 @@ st.markdown("""
         border-radius: 16px !important; 
         padding: 1rem !important;
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
-        animation: fadeInUp 0.8s ease-out forwards;
+        animation: fadeInUp 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) forwards !important;
     }
 
     @keyframes fadeInUp {
-        0% { opacity: 0; transform: translateY(30px); }
+        0% { opacity: 0; transform: translateY(40px); }
         100% { opacity: 1; transform: translateY(0); }
     }
 
@@ -72,7 +72,7 @@ st.markdown("""
         border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
     div[role="dialog"] {
-        background: rgba(35, 2, 20, 0.85) !important; backdrop-filter: blur(20px) !important;
+        background: rgba(35, 2, 20, 0.95) !important; backdrop-filter: blur(20px) !important;
         border: 1px solid rgba(255, 255, 255, 0.2) !important; border-radius: 20px !important; color: #ffffff !important;
     }
     .stTextInput > div > div > input, .stTextArea > div > div > textarea, .stSelectbox > div > div {
@@ -95,7 +95,7 @@ PRODUCTS = [
         "name": "Resin Ring",
         "category": "Jewellery",
         "description": "A visualization of beauty and aesthetics, along with the modern requirements of today's jewellery fashion. Colours can be customised.",
-        "price": 500,
+        "price": 700,
         "images": [
             "images/SaveClip.App_753224950_17897573046550553_9171311841910070315_n.jpg.webp",
             "images/SaveClip.App_729164572_17897573055550553_1935948774416209706_n.jpg.webp",
@@ -207,10 +207,7 @@ def get_base64_image(image_path):
     if os.path.exists(image_path):
         mime_type, _ = mimetypes.guess_type(image_path)
         if not mime_type:
-            if image_path.endswith('.webp'):
-                mime_type = 'image/webp'
-            else:
-                mime_type = 'image/jpeg'
+            mime_type = 'image/webp' if image_path.endswith('.webp') else 'image/jpeg'
         with open(image_path, "rb") as img_file:
             encoded = base64.b64encode(img_file.read()).decode("utf-8")
             return f"data:{mime_type};base64,{encoded}"
@@ -223,7 +220,7 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
         if b64_str:
             active_style = "opacity: 1;" if idx == 0 else "opacity: 0;"
             img_html_elements.append(
-                f'<div class="slide" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; {active_style} transition: opacity 1s ease-in-out; border-radius: 12px;">'
+                f'<div class="slide" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; {active_style} transition: opacity 0.8s ease-in-out; border-radius: 12px;">'
                 f'<img src="{b64_str}" style="width: 100%; height: {height}px; object-fit: cover; border-radius: 12px;">'
                 f'</div>'
             )
@@ -233,7 +230,10 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
         return
 
     unique_id = f"carousel_{random.randint(1000, 9999)}"
-    dots_html = "".join([f'<span class="dot" style="height: 10px; width: 10px; margin: 0 4px; background-color: {"rgba(255, 255, 255, 0.9)" if i == 0 else "rgba(255, 255, 255, 0.3)"}; border-radius: 50%; display: inline-block; transition: all 0.3s ease;"></span>' for i in range(len(img_html_elements))])
+    dots_html = "".join([
+        f'<span class="dot" data-index="{i}" style="height: 12px; width: 12px; margin: 0 5px; background-color: {"rgba(255, 255, 255, 0.95)" if i == 0 else "rgba(255, 255, 255, 0.35)"}; border-radius: 50%; display: inline-block; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.4);"></span>'
+        for i in range(len(img_html_elements))
+    ])
 
     carousel_html = f"""
     <div id="{unique_id}_container" style="position: relative; width: 100%; height: {height}px; border-radius: 12px; overflow: hidden;">
@@ -249,16 +249,38 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
             const slides = container.getElementsByClassName('slide');
             const dots = container.getElementsByClassName('dot');
             let currentIndex = 0;
-            
-            setInterval(() => {{
+            let autoTimer = null;
+
+            function goToSlide(index) {{
                 slides[currentIndex].style.opacity = '0';
-                if (dots[currentIndex]) dots[currentIndex].style.backgroundColor = 'rgba(255, 255, 255, 0.3)';
+                if (dots[currentIndex]) dots[currentIndex].style.backgroundColor = 'rgba(255, 255, 255, 0.35)';
                 
-                currentIndex = (currentIndex + 1) % slides.length;
+                currentIndex = index;
                 
                 slides[currentIndex].style.opacity = '1';
-                if (dots[currentIndex]) dots[currentIndex].style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
-            }}, {interval_sec * 1000});
+                if (dots[currentIndex]) dots[currentIndex].style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+            }}
+
+            function startTimer() {{
+                autoTimer = setInterval(() => {{
+                    goToSlide((currentIndex + 1) % slides.length);
+                }}, {interval_sec * 1000});
+            }}
+
+            function resetTimer() {{
+                clearInterval(autoTimer);
+                startTimer();
+            }}
+
+            for (let i = 0; i < dots.length; i++) {{
+                dots[i].addEventListener('click', function(e) {{
+                    e.stopPropagation();
+                    goToSlide(i);
+                    resetTimer();
+                }});
+            }}
+
+            startTimer();
         }})();
     </script>
     """
@@ -274,6 +296,9 @@ if "pending_order_data" not in st.session_state:
 if "pending_uploaded_files" not in st.session_state:
     st.session_state.pending_uploaded_files = None
 
+if "order_submitted_success" not in st.session_state:
+    st.session_state.order_submitted_success = False
+
 # -----------------------------------------------------------------------------
 # Dialog Windows
 # -----------------------------------------------------------------------------
@@ -283,8 +308,24 @@ def show_confirmation_dialog():
     if not order_data:
         return
 
+    # If already confirmed, stay open with full order details so user can copy/screenshot
+    if st.session_state.order_submitted_success:
+        st.success(f"🎉 Your order **#{order_data['order_no']}** has been placed successfully!")
+        st.write("**Order Summary (Take a screenshot or copy your Order ID):**")
+        st.code(f"Order ID: {order_data['order_no']}\nProduct: {order_data['product_name']}\nQuantity: {order_data['quantity']}\nTotal: PKR {order_data['total_price']:,}/-\nTID: {order_data['transaction_id']}\nName: {order_data['customer_name']}\nPhone: {order_data['customer_phone']}\nAddress: {order_data['customer_address']}")
+        st.divider()
+        if st.button("Close & Return to Catalog", use_container_width=True):
+            st.session_state.pending_order_data = None
+            st.session_state.pending_uploaded_files = None
+            st.session_state.selected_product = None
+            st.session_state.order_submitted_success = False
+            st.rerun()
+        return
+
+    # Initial Confirmation Summary View
     st.write("Please review your order details before submitting:")
     st.markdown(f"""
+    * **Order ID:** `{order_data['order_no']}`
     * **Product:** {order_data['product_name']}
     * **Quantity:** {order_data['quantity']}
     * **Total Amount:** PKR {order_data['total_price']:,}/-
@@ -302,20 +343,17 @@ def show_confirmation_dialog():
                 success, result = send_discord_order(order_data, uploaded_files=st.session_state.pending_uploaded_files)
             
             if success:
-                st.success(f"🎉 Thank you, {order_data['customer_name']}! Your order #{order_data['order_no']} has been placed successfully.")
+                st.session_state.order_submitted_success = True
                 trigger_side_party_poppers()
+                st.rerun()
             else:
                 st.error(f"Failed to deliver order to Discord. Error: {result}")
-            
-            st.session_state.pending_order_data = None
-            st.session_state.pending_uploaded_files = None
-            st.session_state.selected_product = None
-            st.rerun()
 
     with col_cancel:
         if st.button("Cancel", use_container_width=True):
             st.session_state.pending_order_data = None
             st.session_state.pending_uploaded_files = None
+            st.session_state.order_submitted_success = False
             st.rerun()
 
 if st.session_state.selected_product is not None and st.session_state.pending_order_data is None:
