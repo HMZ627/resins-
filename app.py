@@ -10,7 +10,7 @@ import os
 # Configuration & Global Styling
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Resins By R",
+    page_title="Resins Store Catalog",
     page_icon="❤️",
     layout="wide"
 )
@@ -247,38 +247,65 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
     """
     components.html(carousel_html, height=height + 10)
 
-# -----------------------------------------------------------------------------
-# Main User Interface
-# -----------------------------------------------------------------------------
-st.title("Resins By R")
-st.write("Browse products and place orders instantly.")
-
-# Sidebar Filters
-st.sidebar.header("Filter Products")
-categories = ["All"] + sorted(list(set(p["category"] for p in PRODUCTS)))
-selected_category = st.sidebar.selectbox("Select Category", categories)
-st.sidebar.divider()
-st.sidebar.caption("**Web Developer:** 0314-4012872")
-
-filtered_products = PRODUCTS if selected_category == "All" else [p for p in PRODUCTS if p["category"] == selected_category]
-
+# Initialize Session State Variables for Dialog Management
 if "selected_product" not in st.session_state:
     st.session_state.selected_product = None
 
-cols = st.columns(3)
-for idx, product in enumerate(filtered_products):
-    col = cols[idx % 3]
-    with col:
-        render_auto_sliding_carousel(product["images"], height=320, interval_sec=4.5)
-        st.subheader(product["name"])
-        st.write(f"**Category:** {product['category']}")
-        st.write(product["description"])
-        st.write(f"**Price:** PKR {product['price']:,}/-")
-        if st.button("Order Now", key=f"btn_{product['id']}"):
-            st.session_state.selected_product = product
+if "pending_order_data" not in st.session_state:
+    st.session_state.pending_order_data = None
 
-# Order Modal Dialog
-if st.session_state.selected_product is not None:
+if "pending_uploaded_files" not in st.session_state:
+    st.session_state.pending_uploaded_files = None
+
+# -----------------------------------------------------------------------------
+# Dialog Windows
+# -----------------------------------------------------------------------------
+
+# Step 2: Order Confirmation Dialog
+@st.dialog("Confirm Order?")
+def show_confirmation_dialog():
+    order_data = st.session_state.pending_order_data
+    if not order_data:
+        return
+
+    st.write("Please review your order details before submitting:")
+    st.markdown(f"""
+    * **Product:** {order_data['product_name']}
+    * **Quantity:** {order_data['quantity']}
+    * **Total Amount:** PKR {order_data['total_price']:,}/-
+    * **Transaction ID (TID):** `{order_data['transaction_id']}`
+    * **Name:** {order_data['customer_name']}
+    * **Phone:** {order_data['customer_phone']}
+    * **Address:** {order_data['customer_address']}
+    """)
+    st.divider()
+
+    col_confirm, col_cancel = st.columns(2)
+    with col_confirm:
+        if st.button("Confirm", use_container_width=True):
+            with st.spinner("Sending order to Discord..."):
+                success, result = send_discord_order(order_data, uploaded_files=st.session_state.pending_uploaded_files)
+            
+            if success:
+                st.success(f"🎉 Thank you, {order_data['customer_name']}! Your order #{order_data['order_no']} has been placed successfully.")
+                trigger_side_party_poppers()
+            else:
+                st.error(f"Failed to deliver order to Discord. Error: {result}")
+            
+            # Reset state
+            st.session_state.pending_order_data = None
+            st.session_state.pending_uploaded_files = None
+            st.session_state.selected_product = None
+            st.rerun()
+
+    with col_cancel:
+        if st.button("Cancel", use_container_width=True):
+            st.session_state.pending_order_data = None
+            st.session_state.pending_uploaded_files = None
+            st.rerun()
+
+# Step 1: Product Selection & Order Modal
+if st.session_state.selected_product is not None and st.session_state.pending_order_data is None:
     prod = st.session_state.selected_product
     
     @st.dialog(f"Order: {prod['name']}")
@@ -333,7 +360,7 @@ if st.session_state.selected_product is not None:
                 if missing_fields:
                     st.error(f"Please fill in all required fields: {', '.join(missing_fields)}.")
                 else:
-                    order_data = {
+                    st.session_state.pending_order_data = {
                         "order_no": generate_order_number(),
                         "product_name": prod["name"],
                         "quantity": quantity,
@@ -345,21 +372,46 @@ if st.session_state.selected_product is not None:
                         "customer_address": customer_address,
                         "customer_notes": customer_notes
                     }
-                    
-                    with st.spinner("Sending order to Discord..."):
-                        success, result = send_discord_order(order_data, uploaded_files=uploaded_photos)
-                    
-                    if success:
-                        st.success(f"🎉 Thank you, {customer_name}! Your order #{order_data['order_no']} has been placed successfully.")
-                        trigger_side_party_poppers()
-                    else:
-                        st.error(f"Failed to deliver order to Discord. Error: {result}")
+                    st.session_state.pending_uploaded_files = uploaded_photos
+                    st.rerun()
 
         if st.button("Close"):
             st.session_state.selected_product = None
             st.rerun()
 
     show_order_modal()
+
+# Display confirmation dialog if an order is pending
+if st.session_state.pending_order_data is not None:
+    show_confirmation_dialog()
+
+# -----------------------------------------------------------------------------
+# Main User Interface
+# -----------------------------------------------------------------------------
+st.title("Resins By R")
+st.write("Browse products and place orders instantly.")
+
+# Sidebar Filters
+st.sidebar.header("Filter Products")
+categories = ["All"] + sorted(list(set(p["category"] for p in PRODUCTS)))
+selected_category = st.sidebar.selectbox("Select Category", categories)
+st.sidebar.divider()
+st.sidebar.caption("**Web Developer:** 0314-4012872")
+
+filtered_products = PRODUCTS if selected_category == "All" else [p for p in PRODUCTS if p["category"] == selected_category]
+
+cols = st.columns(3)
+for idx, product in enumerate(filtered_products):
+    col = cols[idx % 3]
+    with col:
+        render_auto_sliding_carousel(product["images"], height=320, interval_sec=4.5)
+        st.subheader(product["name"])
+        st.write(f"**Category:** {product['category']}")
+        st.write(product["description"])
+        st.write(f"**Price:** PKR {product['price']:,}/-")
+        if st.button("Order Now", key=f"btn_{product['id']}"):
+            st.session_state.selected_product = product
+            st.rerun()
 
 # -----------------------------------------------------------------------------
 # Reviews & Opinions
