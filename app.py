@@ -10,8 +10,8 @@ import os
 # Configuration & Global Styling
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Resins Store Catalog",
-    page_icon="💍",
+    page_title="Resins-DreamByR",
+    page_icon="❤️",
     layout="wide"
 )
 
@@ -663,7 +663,7 @@ if st.session_state.selected_product is not None:
         # STEP 2: Order Confirmation Dialogue ("Confirm Order?")
         if st.session_state.pending_order is not None:
             order = st.session_state.pending_order
-            st.subheader("Confirm Order?")
+            st.subheader(" Confirm Order?")
             st.write("Please review your order details before final submission:")
             
             st.markdown(f"""
@@ -696,7 +696,7 @@ if st.session_state.selected_product is not None:
                         st.error(f"Failed to submit order to Discord: {result}")
             
             with btn_col2:
-                if st.button("Cancel", use_container_width=True):
+                if st.button(" Cancel", use_container_width=True):
                     st.session_state.pending_order = None
                     st.rerun()
             return
@@ -793,7 +793,7 @@ if st.session_state.selected_product is not None:
                     st.rerun()
 
         st.markdown(
-            "*For further order details, contact on "
+            " *For further order details, contact on "
             "[+92 305-8866692](https://wa.me/923058866692) through WhatsApp.*"
         )
         
@@ -810,7 +810,7 @@ if st.session_state.selected_product is not None:
 # -----------------------------------------------------------------------------
 st.divider()
 
-st.subheader("Leave a Review")
+st.subheader(" Leave a Review")
 
 star_rating_index = st.feedback("stars")
 
@@ -883,4 +883,22 @@ with st.form("client_opinion_form"):
                 st.error(f"Could not submit opinion. Error: {err}")
 
 st.divider()
+
+# Instagram Link Container
+st.markdown(
+    """
+    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+        </svg>
+        <a href="https://www.instagram.com/resin_dreambyrimsha?stkn=NHk5dDlhY2VmM2Q1" target="_blank" style="color: #ffffff; text-decoration: none; font-weight: 600; font-size: 15px;">
+            Resins-DreamByR
+        </a>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+
 st.caption("Web Developer: 0314-4012872")
