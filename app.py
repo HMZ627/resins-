@@ -166,232 +166,135 @@ components.html("""
 </script>
 """, height=0, width=0)
 
-# 2. MAROON SUNBURST RAY CANVAS BACKGROUND INJECTION
+# 2. LIGHT PILLAR WEBGL BACKGROUND INJECTION
 components.html("""
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 (function() {
     const parentDoc = window.parent.document;
-    if (parentDoc.getElementById('bgCanvas')) return;
+    if (parentDoc.getElementById('lightPillarCanvas')) return;
 
     const canvas = parentDoc.createElement('canvas');
-    canvas.id = 'bgCanvas';
-    canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -99999; pointer-events: none; display: block;';
+    canvas.id = 'lightPillarCanvas';
+    canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -99999; pointer-events: none; display: block; background: #000;';
     parentDoc.body.appendChild(canvas);
 
-    const ctx = canvas.getContext('2d');
+    const scene = new THREE.Scene();
+    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    function drawSunburstRays() {
-        const width = canvas.width = window.innerWidth;
-        const height = canvas.height = window.innerHeight;
-
-        // Origin point: Bottom Center
-        const centerX = width / 2;
-        const centerY = height;
-
-        const numRays = 26; 
-        const maxRadius = Math.sqrt(width * width + height * height) * 1.2;
-
-        // Base Background: Dark Maroon / Wine
-        ctx.fillStyle = '#260005';
-        ctx.fillRect(0, 0, width, height);
-
-        // Ray Color: Rich Bright Maroon
-        ctx.fillStyle = '#800020';
-
-        // Draw radial sunburst ray triangles
-        for (let i = 0; i < numRays; i += 2) {
-            const angle1 = (i * Math.PI) / (numRays / 2) - Math.PI;
-            const angle2 = ((i + 1) * Math.PI) / (numRays / 2) - Math.PI;
-
-            ctx.beginPath();
-            ctx.moveTo(centerX, centerY);
-            ctx.arc(centerX, centerY, maxRadius, angle1, angle2);
-            ctx.closePath();
-            ctx.fill();
-        }
-
-        // Soft Radial Glow Overlay from bottom center
-        const glow = ctx.createRadialGradient(centerX, centerY, 20, centerX, centerY, height * 0.85);
-        glow.addColorStop(0, 'rgba(168, 18, 54, 0.45)'); 
-        glow.addColorStop(1, 'rgba(10, 0, 2, 0.7)');       
-
-        ctx.fillStyle = glow;
-        ctx.fillRect(0, 0, width, height);
-    }
-
-    window.addEventListener('resize', drawSunburstRays);
-    drawSunburstRays();
-})();
-</script>
-""", height=0, width=0)
-
-# 3. GLOBAL CSS STYLING
-st.markdown("""
-<style>
-    #MainMenu,
-    footer,
-    [data-testid="stStatusWidget"],
-    [data-testid="manage-app-button"],
-    .stDeployButton,
-    [data-testid="stDecoration"],
-    [data-testid="stHeaderActionElements"] {
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    header[data-testid="stHeader"] {
-        background: transparent !important;
-        z-index: 99990 !important;
-    }
-
-    [data-testid="stSidebarCollapseButton"],
-    [data-testid="collapsedControl"],
-    header[data-testid="stHeader"] button {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        color: #ffffff !important;
-        background: rgba(255, 255, 255, 0.15) !important;
-        backdrop-filter: blur(8px) !important;
-        -webkit-backdrop-filter: blur(8px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        border-radius: 8px !important;
-        z-index: 99999 !important;
-        margin-left: 8px !important;
-        margin-top: 4px !important;
-    }
-
-    [data-testid="stSidebarCollapseButton"] svg,
-    [data-testid="collapsedControl"] svg,
-    header[data-testid="stHeader"] button svg {
-        fill: #ffffff !important;
-        stroke: #ffffff !important;
-        color: #ffffff !important;
-    }
-
-    [data-testid="stAppViewContainer"] {
-        background: transparent !important;
-    }
-
-    .stApp {
-        background: transparent !important;
-        color: #ffffff !important;
-    }
-
-    div[data-testid="stVerticalBlock"] > div[style*="flex"] {
-        background: rgba(255, 255, 255, 0.06) !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.18) !important;
-        border-radius: 16px !important;
-        padding: 1rem !important;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45) !important;
-    }
-
-    .stButton > button {
-        background: rgba(255, 255, 255, 0.15) !important;
-        backdrop-filter: blur(10px) !important;
-        -webkit-backdrop-filter: blur(10px) !important;
-        color: #ffffff !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
-        border-radius: 12px !important;
-        font-weight: 600 !important;
-        transition: all 0.3s ease !important;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
-    }
-
-    .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.3) !important;
-        border-color: rgba(255, 255, 255, 0.6) !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(128, 0, 32, 0.5) !important;
-    }
-
-    section[data-testid="stSidebar"] {
-        background: rgba(38, 0, 5, 0.88) !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
-    }
-
-    div[role="dialog"] {
-        background: rgba(38, 0, 5, 0.94) !important;
-        backdrop-filter: blur(20px) !important;
-        -webkit-backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
-        border-radius: 20px !important;
-        color: #ffffff !important;
-    }
-
-    .stTextInput > div > div > input, .stTextArea > div > div > textarea, .stSelectbox > div > div {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
-        color: #ffffff !important;
-        border-radius: 10px !important;
-    }
-
-    div[data-testid="stFeedback"] button {
-        transform: scale(1.3);
-        margin-right: 8px;
-    }
-
-    .scroll-target {
-        opacity: 0;
-        transform: translateY(40px);
-        transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
-        will-change: opacity, transform;
-    }
-
-    .scroll-target.in-view {
-        opacity: 1;
-        transform: translateY(0px);
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# Intersection Observer for Scroll Effects
-components.html("""
-<script>
-    function setupScrollObserver() {
-        const parentDoc = window.parent.document;
-        const mainContainer = parentDoc.querySelector('section.main') || parentDoc.querySelector('[data-testid="stMain"]');
-        if (!mainContainer) return;
-
-        const selectors = [
-            'div[data-testid="stVerticalBlock"] > div',
-            'div[data-testid="stMarkdownContainer"]',
-            'div[data-testid="column"]',
-            'form'
-        ];
-        
-        const elementsToObserve = mainContainer.querySelectorAll(selectors.join(', '));
-
-        const observerOptions = {
-            root: null,
-            rootMargin: '0px 0px -40px 0px',
-            threshold: 0.12
-        };
-
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('in-view');
-                } else {
-                    entry.target.classList.remove('in-view');
-                }
-            });
-        }, observerOptions);
-
-        elementsToObserve.forEach(el => {
-            if (!el.classList.contains('scroll-target')) {
-                el.classList.add('scroll-target');
+    // Custom Shader implementing exact LightPillar parameters
+    const material = new THREE.ShaderMaterial({
+        uniforms: {
+            uTime: { value: 0 },
+            uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+            uTopColor: { value: new THREE.Color("#5227FF") },
+            uBottomColor: { value: new THREE.Color("#FF9FFC") },
+            uIntensity: { value: 1.0 },
+            uRotationSpeed: { value: 0.4 },
+            uGlowAmount: { value: 0.002 },
+            uPillarWidth: { value: 3.0 },
+            uPillarHeight: { value: 0.4 },
+            uNoiseIntensity: { value: 0.5 },
+            uPillarRotation: { value: 25.0 * (Math.PI / 180.0) }
+        },
+        vertexShader: `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = vec4(position, 1.0);
             }
-            observer.observe(el);
-        });
-    }
+        `,
+        fragmentShader: `
+            uniform float uTime;
+            uniform vec2 uResolution;
+            uniform vec3 uTopColor;
+            uniform vec3 uBottomColor;
+            uniform float uIntensity;
+            uniform float uRotationSpeed;
+            uniform float uGlowAmount;
+            uniform float uPillarWidth;
+            uniform float uPillarHeight;
+            uniform float uNoiseIntensity;
+            uniform float uPillarRotation;
+            varying vec2 vUv;
 
-    setTimeout(setupScrollObserver, 300);
-    setInterval(setupScrollObserver, 1500);
+            // Simple pseudo-noise function
+            float hash(vec2 p) {
+                p = fract(p * vec2(123.34, 456.21));
+                p += dot(p, p + 45.32);
+                return fract(p.x * p.y);
+            }
+
+            float noise(vec2 p) {
+                vec2 i = floor(p);
+                vec2 f = fract(p);
+                f = f * f * (3.0 - 2.0 * f);
+                float a = hash(i);
+                float b = hash(i + vec2(1.0, 0.0));
+                float c = hash(i + vec2(0.0, 1.0));
+                float d = hash(i + vec2(1.0, 1.0));
+                return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+            }
+
+            void main() {
+                vec2 st = (gl_FragCoord.xy - 0.5 * uResolution.xy) / uResolution.y;
+
+                // Apply rotation
+                float angle = uPillarRotation + uTime * uRotationSpeed * 0.2;
+                mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
+                st = rot * st;
+
+                // Scale for width/height proportions
+                st.x /= uPillarWidth;
+                st.y /= uPillarHeight;
+
+                // Add organic wave movement & noise
+                float n = noise(st * 3.0 + vec2(0.0, uTime * uRotationSpeed));
+                st.x += (n - 0.5) * uNoiseIntensity * 0.2;
+
+                // Light pillar core beam
+                float dist = abs(st.x);
+                float beam = uGlowAmount / (dist + 0.0001);
+                beam = pow(beam, 1.2) * uIntensity;
+
+                // Height attenuation gradient
+                float verticalGradient = smoothstep(-1.0, 1.0, st.y);
+                vec3 color = mix(uBottomColor, uTopColor, verticalGradient);
+
+                // Add ambient glow edge
+                float outerGlow = exp(-dist * 8.0) * 0.4;
+                vec3 finalColor = color * (beam + outerGlow);
+
+                // Output with screen blend support
+                gl_FragColor = vec4(finalColor, clamp(length(finalColor), 0.0, 1.0));
+            }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending
+    });
+
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+
+    // Animation Loop
+    let clock = new THREE.Clock();
+    function animate() {
+        requestAnimationFrame(animate);
+        material.uniforms.uTime.value = clock.getElapsedTime();
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    // Handle Window Resize
+    window.addEventListener('resize', () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        material.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
+    });
+})();
 </script>
 """, height=0, width=0)
 
