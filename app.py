@@ -298,6 +298,176 @@ components.html("""
 </script>
 """, height=0, width=0)
 
+# 3. GLOBAL CSS STYLING
+st.markdown("""
+<style>
+    #MainMenu,
+    footer,
+    [data-testid="stStatusWidget"],
+    [data-testid="manage-app-button"],
+    .stDeployButton,
+    [data-testid="stDecoration"],
+    [data-testid="stHeaderActionElements"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    header[data-testid="stHeader"] {
+        background: transparent !important;
+        z-index: 99990 !important;
+    }
+
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="collapsedControl"],
+    header[data-testid="stHeader"] button {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        color: #ffffff !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 8px !important;
+        z-index: 99999 !important;
+        margin-left: 8px !important;
+        margin-top: 4px !important;
+    }
+
+    [data-testid="stSidebarCollapseButton"] svg,
+    [data-testid="collapsedControl"] svg,
+    header[data-testid="stHeader"] button svg {
+        fill: #ffffff !important;
+        stroke: #ffffff !important;
+        color: #ffffff !important;
+    }
+
+    [data-testid="stAppViewContainer"] {
+        background: transparent !important;
+    }
+
+    .stApp {
+        background: transparent !important;
+        color: #ffffff !important;
+    }
+
+    div[data-testid="stVerticalBlock"] > div[style*="flex"] {
+        background: rgba(255, 255, 255, 0.06) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.18) !important;
+        border-radius: 16px !important;
+        padding: 1rem !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45) !important;
+    }
+
+    .stButton > button {
+        background: rgba(255, 255, 255, 0.15) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        color: #ffffff !important;
+        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+    }
+
+    .stButton > button:hover {
+        background: rgba(255, 255, 255, 0.3) !important;
+        border-color: rgba(255, 255, 255, 0.6) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(128, 0, 32, 0.5) !important;
+    }
+
+    section[data-testid="stSidebar"] {
+        background: rgba(10, 0, 20, 0.88) !important;
+        backdrop-filter: blur(16px) !important;
+        -webkit-backdrop-filter: blur(16px) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+
+    div[role="dialog"] {
+        background: rgba(10, 0, 20, 0.94) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border-radius: 20px !important;
+        color: #ffffff !important;
+    }
+
+    .stTextInput > div > div > input, .stTextArea > div > div > textarea, .stSelectbox > div > div {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        color: #ffffff !important;
+        border-radius: 10px !important;
+    }
+
+    div[data-testid="stFeedback"] button {
+        transform: scale(1.3);
+        margin-right: 8px;
+    }
+
+    .scroll-target {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: opacity 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        will-change: opacity, transform;
+    }
+
+    .scroll-target.in-view {
+        opacity: 1;
+        transform: translateY(0px);
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Intersection Observer for Scroll Effects
+components.html("""
+<script>
+    function setupScrollObserver() {
+        const parentDoc = window.parent.document;
+        const mainContainer = parentDoc.querySelector('section.main') || parentDoc.querySelector('[data-testid="stMain"]');
+        if (!mainContainer) return;
+
+        const selectors = [
+            'div[data-testid="stVerticalBlock"] > div',
+            'div[data-testid="stMarkdownContainer"]',
+            'div[data-testid="column"]',
+            'form'
+        ];
+        
+        const elementsToObserve = mainContainer.querySelectorAll(selectors.join(', '));
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px 0px -40px 0px',
+            threshold: 0.12
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                } else {
+                    entry.target.classList.remove('in-view');
+                }
+            });
+        }, observerOptions);
+
+        elementsToObserve.forEach(el => {
+            if (!el.classList.contains('scroll-target')) {
+                el.classList.add('scroll-target');
+            }
+            observer.observe(el);
+        });
+    }
+
+    setTimeout(setupScrollObserver, 300);
+    setInterval(setupScrollObserver, 1500);
+</script>
+""", height=0, width=0)
+
 # Discord Webhook Credential
 DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1548288796200534066/x0AnH1nWfR4O6dt-OV1u5C4iaGLJ13z0GUe8I6WB7LgohPX2XF1Z9Csrrm1IEfNbbba3"
 
@@ -373,7 +543,7 @@ def send_discord_order(order_data, uploaded_files=None):
     
     embed = {
         "title": "🛒 NEW ORDER RECEIVED",
-        "color": 8388640,  # Crimson Maroon
+        "color": 8388640,
         "fields": [
             {"name": "Order Number", "value": f"`{order_data['order_no']}`", "inline": True},
             {"name": "Product", "value": order_data['product_name'], "inline": True},
@@ -803,7 +973,7 @@ with st.form("client_opinion_form"):
         else:
             opinion_embed = {
                 "title": "💡 NEW CLIENT OPINION",
-                "color": 8388640,  # Maroon Accent
+                "color": 8388640,
                 "fields": [
                     {"name": "Opinion", "value": opinion_text.strip(), "inline": False}
                 ],
