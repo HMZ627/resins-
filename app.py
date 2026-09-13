@@ -33,7 +33,7 @@ components.html("""
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            background: linear-gradient(135deg, #1f0004 0%, #3a0007 50%, #1f0004 100%) !important;
+            background: linear-gradient(135deg, #1a000d 0%, #3d0017 50%, #1a000d 100%) !important;
             z-index: 9999999 !important;
             display: flex !important;
             flex-direction: column !important;
@@ -58,9 +58,9 @@ components.html("""
             position: absolute;
             width: 45px;
             height: 45px;
-            background: radial-gradient(circle at 30% 30%, #800020, #a81236, #ff4d6d);
+            background: radial-gradient(circle at 30% 30%, #ff66a3, #e91e63, #800020);
             border-radius: 50% 50% 50% 0;
-            box-shadow: 0 0 20px rgba(128, 0, 32, 0.8), inset -2px -2px 6px rgba(0,0,0,0.4);
+            box-shadow: 0 0 20px rgba(233, 30, 99, 0.8), inset -2px -2px 6px rgba(0,0,0,0.4);
         }
 
         .droplet-left {
@@ -80,7 +80,7 @@ components.html("""
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            border: 4px solid #800020;
+            border: 4px solid #ff66a3;
             opacity: 0;
             animation: splashExpand 0.6s ease-out forwards;
             animation-delay: 1.2s;
@@ -91,7 +91,7 @@ components.html("""
             font-size: 80px;
             font-weight: 900;
             color: #ffffff;
-            text-shadow: 0 0 25px #800020, 0 0 50px #a81236;
+            text-shadow: 0 0 25px #ff66a3, 0 0 50px #e91e63;
             opacity: 0;
             transform: scale(0.2);
             animation: logoAppear 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -166,139 +166,7 @@ components.html("""
 </script>
 """, height=0, width=0)
 
-# 2. LIGHT PILLAR WEBGL BACKGROUND INJECTION
-components.html("""
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script>
-(function() {
-    const parentDoc = window.parent.document;
-    if (parentDoc.getElementById('lightPillarCanvas')) return;
-
-    const canvas = parentDoc.createElement('canvas');
-    canvas.id = 'lightPillarCanvas';
-    canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -99999; pointer-events: none; display: block; background: #000;';
-    parentDoc.body.appendChild(canvas);
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-
-    // Custom Shader implementing exact LightPillar parameters
-    const material = new THREE.ShaderMaterial({
-        uniforms: {
-            uTime: { value: 0 },
-            uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
-            uTopColor: { value: new THREE.Color("#5227FF") },
-            uBottomColor: { value: new THREE.Color("#FF9FFC") },
-            uIntensity: { value: 1.0 },
-            uRotationSpeed: { value: 0.4 },
-            uGlowAmount: { value: 0.002 },
-            uPillarWidth: { value: 3.0 },
-            uPillarHeight: { value: 0.4 },
-            uNoiseIntensity: { value: 0.5 },
-            uPillarRotation: { value: 25.0 * (Math.PI / 180.0) }
-        },
-        vertexShader: `
-            varying vec2 vUv;
-            void main() {
-                vUv = uv;
-                gl_Position = vec4(position, 1.0);
-            }
-        `,
-        fragmentShader: `
-            uniform float uTime;
-            uniform vec2 uResolution;
-            uniform vec3 uTopColor;
-            uniform vec3 uBottomColor;
-            uniform float uIntensity;
-            uniform float uRotationSpeed;
-            uniform float uGlowAmount;
-            uniform float uPillarWidth;
-            uniform float uPillarHeight;
-            uniform float uNoiseIntensity;
-            uniform float uPillarRotation;
-            varying vec2 vUv;
-
-            // Simple pseudo-noise function
-            float hash(vec2 p) {
-                p = fract(p * vec2(123.34, 456.21));
-                p += dot(p, p + 45.32);
-                return fract(p.x * p.y);
-            }
-
-            float noise(vec2 p) {
-                vec2 i = floor(p);
-                vec2 f = fract(p);
-                f = f * f * (3.0 - 2.0 * f);
-                float a = hash(i);
-                float b = hash(i + vec2(1.0, 0.0));
-                float c = hash(i + vec2(0.0, 1.0));
-                float d = hash(i + vec2(1.0, 1.0));
-                return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
-            }
-
-            void main() {
-                vec2 st = (gl_FragCoord.xy - 0.5 * uResolution.xy) / uResolution.y;
-
-                // Apply rotation
-                float angle = uPillarRotation + uTime * uRotationSpeed * 0.2;
-                mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
-                st = rot * st;
-
-                // Scale for width/height proportions
-                st.x /= uPillarWidth;
-                st.y /= uPillarHeight;
-
-                // Add organic wave movement & noise
-                float n = noise(st * 3.0 + vec2(0.0, uTime * uRotationSpeed));
-                st.x += (n - 0.5) * uNoiseIntensity * 0.2;
-
-                // Light pillar core beam
-                float dist = abs(st.x);
-                float beam = uGlowAmount / (dist + 0.0001);
-                beam = pow(beam, 1.2) * uIntensity;
-
-                // Height attenuation gradient
-                float verticalGradient = smoothstep(-1.0, 1.0, st.y);
-                vec3 color = mix(uBottomColor, uTopColor, verticalGradient);
-
-                // Add ambient glow edge
-                float outerGlow = exp(-dist * 8.0) * 0.4;
-                vec3 finalColor = color * (beam + outerGlow);
-
-                // Output with screen blend support
-                gl_FragColor = vec4(finalColor, clamp(length(finalColor), 0.0, 1.0));
-            }
-        `,
-        transparent: true,
-        blending: THREE.AdditiveBlending
-    });
-
-    const geometry = new THREE.PlaneGeometry(2, 2);
-    const mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
-
-    // Animation Loop
-    let clock = new THREE.Clock();
-    function animate() {
-        requestAnimationFrame(animate);
-        material.uniforms.uTime.value = clock.getElapsedTime();
-        renderer.render(scene, camera);
-    }
-    animate();
-
-    // Handle Window Resize
-    window.addEventListener('resize', () => {
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        material.uniforms.uResolution.value.set(window.innerWidth, window.innerHeight);
-    });
-})();
-</script>
-""", height=0, width=0)
-
-# 3. GLOBAL CSS STYLING
+# 2. GLOBAL CSS STYLING
 st.markdown("""
 <style>
     #MainMenu,
@@ -346,27 +214,53 @@ st.markdown("""
         background: transparent !important;
     }
 
+    [data-testid="stAppViewContainer"]::before {
+        content: "";
+        position: fixed;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        z-index: -99999;
+        background: linear-gradient(
+            135deg, 
+            #1a000d 0%, 
+            #5a0022 20%, 
+            #990033 40%, 
+            #2b021d 60%, 
+            #800020 80%, 
+            #4a001e 100%
+        );
+        animation: diagonalMove 12s linear infinite alternate;
+        pointer-events: none;
+    }
+
+    @keyframes diagonalMove {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(-25%, -25%); }
+    }
+
     .stApp {
         background: transparent !important;
         color: #ffffff !important;
     }
 
     div[data-testid="stVerticalBlock"] > div[style*="flex"] {
-        background: rgba(255, 255, 255, 0.06) !important;
-        backdrop-filter: blur(16px) !important;
-        -webkit-backdrop-filter: blur(16px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.18) !important;
+        background: rgba(255, 255, 255, 0.07) !important;
+        backdrop-filter: blur(12px) !important;
+        -webkit-backdrop-filter: blur(12px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
         border-radius: 16px !important;
         padding: 1rem !important;
-        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45) !important;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37) !important;
     }
 
     .stButton > button {
-        background: rgba(255, 255, 255, 0.15) !important;
+        background: rgba(255, 255, 255, 0.12) !important;
         backdrop-filter: blur(10px) !important;
         -webkit-backdrop-filter: blur(10px) !important;
         color: #ffffff !important;
-        border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        border: 1px solid rgba(255, 255, 255, 0.25) !important;
         border-radius: 12px !important;
         font-weight: 600 !important;
         transition: all 0.3s ease !important;
@@ -374,31 +268,31 @@ st.markdown("""
     }
 
     .stButton > button:hover {
-        background: rgba(255, 255, 255, 0.3) !important;
-        border-color: rgba(255, 255, 255, 0.6) !important;
+        background: rgba(255, 255, 255, 0.25) !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(128, 0, 32, 0.5) !important;
+        box-shadow: 0 6px 20px rgba(233, 30, 99, 0.4) !important;
     }
 
     section[data-testid="stSidebar"] {
-        background: rgba(10, 0, 20, 0.88) !important;
+        background: rgba(30, 0, 15, 0.85) !important;
         backdrop-filter: blur(16px) !important;
         -webkit-backdrop-filter: blur(16px) !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important;
     }
 
     div[role="dialog"] {
-        background: rgba(10, 0, 20, 0.94) !important;
+        background: rgba(35, 2, 20, 0.85) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
         border-radius: 20px !important;
         color: #ffffff !important;
     }
 
     .stTextInput > div > div > input, .stTextArea > div > div > textarea, .stSelectbox > div > div {
-        background: rgba(255, 255, 255, 0.1) !important;
-        border: 1px solid rgba(255, 255, 255, 0.25) !important;
+        background: rgba(255, 255, 255, 0.08) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
         color: #ffffff !important;
         border-radius: 10px !important;
     }
@@ -527,6 +421,7 @@ def send_discord_message(content=None, embeds=None, files=None):
 
     try:
         if files:
+            # Send multipart form data if image attachments are included
             res = requests.post(DISCORD_WEBHOOK_URL, data={"payload_json": requests.compat.json.dumps(payload)}, files=files, timeout=10)
         else:
             res = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=8)
@@ -543,7 +438,7 @@ def send_discord_order(order_data, uploaded_files=None):
     
     embed = {
         "title": "🛒 NEW ORDER RECEIVED",
-        "color": 8388640,
+        "color": 15212643,  # Deep Pink / Burgundy Accent
         "fields": [
             {"name": "Order Number", "value": f"`{order_data['order_no']}`", "inline": True},
             {"name": "Product", "value": order_data['product_name'], "inline": True},
@@ -750,7 +645,7 @@ if st.session_state.selected_product is not None:
     
     @st.dialog(f"Order: {prod['name']}")
     def show_order_modal():
-        # STEP 3: Order Completed View
+        # STEP 3: Order Completed View (Display Order ID for copying/screenshotting)
         if st.session_state.completed_order_id:
             st.success("🎉 Order Placed Successfully!")
             st.subheader("Your Order ID")
@@ -973,7 +868,7 @@ with st.form("client_opinion_form"):
         else:
             opinion_embed = {
                 "title": "💡 NEW CLIENT OPINION",
-                "color": 8388640,
+                "color": 3447003,  # Blue Accent
                 "fields": [
                     {"name": "Opinion", "value": opinion_text.strip(), "inline": False}
                 ],
@@ -993,7 +888,7 @@ st.divider()
 st.markdown(
     """
     <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#800020" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e91e63" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
             <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
             <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
