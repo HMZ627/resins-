@@ -33,7 +33,7 @@ components.html("""
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
-            background: linear-gradient(135deg, #000206 0%, #150012 50%, #000206 100%) !important;
+            background: linear-gradient(135deg, #1f0004 0%, #3a0007 50%, #1f0004 100%) !important;
             z-index: 9999999 !important;
             display: flex !important;
             flex-direction: column !important;
@@ -58,9 +58,9 @@ components.html("""
             position: absolute;
             width: 45px;
             height: 45px;
-            background: radial-gradient(circle at 30% 30%, #FF004B, #6EABF5, #CFE4FF);
+            background: radial-gradient(circle at 30% 30%, #800020, #a81236, #ff4d6d);
             border-radius: 50% 50% 50% 0;
-            box-shadow: 0 0 20px rgba(255, 0, 75, 0.8), inset -2px -2px 6px rgba(0,0,0,0.4);
+            box-shadow: 0 0 20px rgba(128, 0, 32, 0.8), inset -2px -2px 6px rgba(0,0,0,0.4);
         }
 
         .droplet-left {
@@ -80,7 +80,7 @@ components.html("""
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            border: 4px solid #FF004B;
+            border: 4px solid #800020;
             opacity: 0;
             animation: splashExpand 0.6s ease-out forwards;
             animation-delay: 1.2s;
@@ -91,7 +91,7 @@ components.html("""
             font-size: 80px;
             font-weight: 900;
             color: #ffffff;
-            text-shadow: 0 0 25px #FF004B, 0 0 50px #6EABF5;
+            text-shadow: 0 0 25px #800020, 0 0 50px #a81236;
             opacity: 0;
             transform: scale(0.2);
             animation: logoAppear 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
@@ -166,181 +166,61 @@ components.html("""
 </script>
 """, height=0, width=0)
 
-# 2. RAY COLUMN WEBGL BACKGROUND INJECTION
+# 2. MAROON SUNBURST RAY CANVAS BACKGROUND INJECTION
 components.html("""
 <script>
 (function() {
     const parentDoc = window.parent.document;
-    if (parentDoc.getElementById('ray-column-bg-canvas')) return;
+    if (parentDoc.getElementById('bgCanvas')) return;
 
     const canvas = parentDoc.createElement('canvas');
-    canvas.id = 'ray-column-bg-canvas';
+    canvas.id = 'bgCanvas';
     canvas.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -99999; pointer-events: none; display: block;';
     parentDoc.body.appendChild(canvas);
 
-    const gl = canvas.getContext('webgl', { antialias: false, alpha: false, depth: false });
-    if (!gl) return;
+    const ctx = canvas.getContext('2d');
 
-    const VERT_SRC = `
-        attribute vec2 a_pos;
-        void main() { gl_Position = vec4(a_pos, 0.0, 1.0); }
-    `;
+    function drawSunburstRays() {
+        const width = canvas.width = window.innerWidth;
+        const height = canvas.height = window.innerHeight;
 
-    const FRAG_SRC = `
-        #ifdef GL_FRAGMENT_PRECISION_HIGH
-        precision highp float;
-        #else
-        precision mediump float;
-        #endif
+        // Origin point: Bottom Center
+        const centerX = width / 2;
+        const centerY = height;
 
-        uniform vec2  uRes;
-        uniform float uTime;
-        uniform vec2  uMouse;
-        uniform float uHover;
+        const numRays = 26; 
+        const maxRadius = Math.sqrt(width * width + height * height) * 1.2;
 
-        const float PI  = 3.14159265;
-        const float TAU = 6.28318531;
+        // Base Background: Dark Maroon / Wine
+        ctx.fillStyle = '#260005';
+        ctx.fillRect(0, 0, width, height);
 
-        float sat(float x){ return clamp(x, 0.0, 1.0); }
-        float pw(float x, float e){ return pow(max(x, 1e-5), e); }
-        float hash21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 34.56); return fract(p.x * p.y); }
-        float vnoise(vec2 p){
-          vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
-          float a = hash21(i), b = hash21(i + vec2(1.0, 0.0));
-          float c = hash21(i + vec2(0.0, 1.0)), d = hash21(i + vec2(1.0, 1.0));
-          return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+        // Ray Color: Rich Bright Maroon
+        ctx.fillStyle = '#800020';
+
+        // Draw radial sunburst ray triangles
+        for (let i = 0; i < numRays; i += 2) {
+            const angle1 = (i * Math.PI) / (numRays / 2) - Math.PI;
+            const angle2 = ((i + 1) * Math.PI) / (numRays / 2) - Math.PI;
+
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, maxRadius, angle1, angle2);
+            ctx.closePath();
+            ctx.fill();
         }
-        float fbm3(vec2 p){ float s = 0.0, a = 0.5; for(int i = 0; i < 3; i++){ s += a * vnoise(p); p = p * 2.07 + vec2(4.1, 2.3); a *= 0.5; } return s; }
 
-        uniform vec3 uBg, uBase, uAccent, uHigh;
-        uniform float uRays, uContrast, uSweep, uFall, uAper, uDirection;
+        // Soft Radial Glow Overlay from bottom center
+        const glow = ctx.createRadialGradient(centerX, centerY, 20, centerX, centerY, height * 0.85);
+        glow.addColorStop(0, 'rgba(168, 18, 54, 0.45)'); 
+        glow.addColorStop(1, 'rgba(10, 0, 2, 0.7)');       
 
-        void main(){
-          float ar = uRes.x / max(uRes.y, 1.0);
-          vec2 uv = gl_FragCoord.xy / uRes;
-          vec2 p = (uv - 0.5) * vec2(ar, 1.0);
-          float t = uTime * 0.07;
-
-          float dcs = cos(uDirection), dsn = sin(uDirection);
-          mat2 drot = mat2(dcs, -dsn, dsn, dcs);
-          p = drot * p;
-          vec2 src = vec2(0.0, -0.78);
-          vec2 d = p - src;
-          float r = max(length(d), 1e-3);
-          float th = atan(d.x, d.y);
-
-          vec2 mp = drot * ((uMouse - 0.5) * vec2(ar, 1.0));
-          vec2 md = mp - src;
-          float mr = max(length(md), 1e-3);
-          float mth = atan(md.x, md.y);
-          float ang = abs(mod(th - mth + PI, TAU) - PI);
-          float aw = max(uAper, 0.02);
-          float h = sat(uHover);
-          float swell = 1.0 + 0.55 * exp(-pw(abs(r - mr) / 0.40, 2.0));
-          float open  = h * exp(-pw(ang / aw, 2.0)) * swell;
-
-          float close = h * smoothstep(aw, aw + 0.30, ang);
-
-          float v = fbm3(vec2(th * uRays, r * 0.9 - t * 2.4));
-          v += 0.50 * vnoise(vec2(th * uRays * 2.4 + 3.0, r * 1.8 - t * 3.6));
-          v = pw(sat(v * 1.10 - 0.31), uContrast);
-
-          v = mix(v, smoothstep(0.08, 0.50, v), 0.60 * sat(open));
-          float env = exp(-pw(max(r - 0.30, 0.0) * uFall, 1.5));
-          float aen = exp(-pw(abs(th) / max(uSweep, 0.05), 2.0));
-
-          float body = v * env * aen * (1.0 + 0.90 * open) * (1.0 - 0.55 * close);
-          float bloom = exp(-pw(max(r - 0.18, 0.0) * uFall * 1.30, 1.7)) * aen * (1.0 + 0.25 * open);
-          vec3 col = uBg;
-          col += uBase * bloom * 0.90;
-          col += mix(uBase, uAccent, sat(body * 1.6)) * body * 2.4;
-          col += uHigh * pw(sat(body - 0.38), 2.0) * 1.10;
-          gl_FragColor = vec4(clamp(col, 0.0, 1.0), 1.0);
-        }
-    `;
-
-    function compile(type, src) {
-        const sh = gl.createShader(type);
-        gl.shaderSource(sh, src);
-        gl.compileShader(sh);
-        return sh;
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, width, height);
     }
 
-    const vs = compile(gl.VERTEX_SHADER, VERT_SRC);
-    const fs = compile(gl.FRAGMENT_SHADER, FRAG_SRC);
-    const prog = gl.createProgram();
-    gl.attachShader(prog, vs);
-    gl.attachShader(prog, fs);
-    gl.linkProgram(prog);
-    gl.useProgram(prog);
-
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
-    const posLoc = gl.getAttribLocation(prog, "a_pos");
-    gl.enableVertexAttribArray(posLoc);
-    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
-
-    const locs = {};
-    const u = (name) => {
-        if (!(name in locs)) locs[name] = gl.getUniformLocation(prog, name);
-        return locs[name];
-    };
-
-    let ptr = { x: 0.5, y: 0.5, tx: 0.5, ty: 0.5, on: 0, onTarget: 0 };
-    let last = performance.now();
-    let clock = 0;
-
-    parentDoc.addEventListener('pointermove', (e) => {
-        ptr.tx = e.clientX / window.innerWidth;
-        ptr.ty = e.clientY / window.innerHeight;
-        ptr.onTarget = 1;
-    });
-
-    function render(now) {
-        const dt = Math.min(0.05, (now - last) / 1000);
-        last = now;
-
-        clock = (clock + dt * 1.0) % 3600;
-
-        const k = 1 - Math.exp(-6 * dt);
-        ptr.on += (ptr.onTarget - ptr.on) * k;
-        ptr.x += ((ptr.onTarget > 0 ? ptr.tx : 0.5) - ptr.x) * k;
-        ptr.y += ((ptr.onTarget > 0 ? ptr.ty : 0.5) - ptr.y) * k;
-
-        const dpr = Math.min(window.devicePixelRatio || 1, 2);
-        const bw = Math.max(1, Math.round(window.innerWidth * dpr));
-        const bh = Math.max(1, Math.round(window.innerHeight * dpr));
-
-        if (canvas.width !== bw || canvas.height !== bh) {
-            canvas.width = bw;
-            canvas.height = bh;
-        }
-        gl.viewport(0, 0, bw, bh);
-
-        gl.uniform2f(u("uRes"), bw, bh);
-        gl.uniform1f(u("uTime"), clock);
-        gl.uniform2f(u("uMouse"), ptr.x, 1 - ptr.y);
-        gl.uniform1f(u("uHover"), Math.min(1, ptr.on) * 2.0);
-
-        // Colors matching your preset:
-        gl.uniform3f(u("uBg"), 0.0, 0.008, 0.024);         // #000206
-        gl.uniform3f(u("uBase"), 1.0, 0.0, 0.294);        // #FF004B
-        gl.uniform3f(u("uAccent"), 0.431, 0.671, 0.961);   // #6EABF5
-        gl.uniform3f(u("uHigh"), 0.812, 0.894, 1.0);       // #CFE4FF
-
-        gl.uniform1f(u("uRays"), 4.2);
-        gl.uniform1f(u("uContrast"), 1.5);
-        gl.uniform1f(u("uSweep"), 0.85);
-        gl.uniform1f(u("uFall"), 1.5);
-        gl.uniform1f(u("uAper"), 0.05);
-        gl.uniform1f(u("uDirection"), 0.0);
-
-        gl.drawArrays(gl.TRIANGLES, 0, 3);
-        requestAnimationFrame(render);
-    }
-
-    requestAnimationFrame(render);
+    window.addEventListener('resize', drawSunburstRays);
+    drawSunburstRays();
 })();
 </script>
 """, height=0, width=0)
@@ -424,18 +304,18 @@ st.markdown("""
         background: rgba(255, 255, 255, 0.3) !important;
         border-color: rgba(255, 255, 255, 0.6) !important;
         transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(255, 0, 75, 0.4) !important;
+        box-shadow: 0 6px 20px rgba(128, 0, 32, 0.5) !important;
     }
 
     section[data-testid="stSidebar"] {
-        background: rgba(0, 2, 6, 0.88) !important;
+        background: rgba(38, 0, 5, 0.88) !important;
         backdrop-filter: blur(16px) !important;
         -webkit-backdrop-filter: blur(16px) !important;
         border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
     }
 
     div[role="dialog"] {
-        background: rgba(0, 2, 6, 0.94) !important;
+        background: rgba(38, 0, 5, 0.94) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
         border: 1px solid rgba(255, 255, 255, 0.25) !important;
@@ -590,7 +470,7 @@ def send_discord_order(order_data, uploaded_files=None):
     
     embed = {
         "title": "🛒 NEW ORDER RECEIVED",
-        "color": 16711755,  # Crimson Pink
+        "color": 8388640,  # Crimson Maroon
         "fields": [
             {"name": "Order Number", "value": f"`{order_data['order_no']}`", "inline": True},
             {"name": "Product", "value": order_data['product_name'], "inline": True},
@@ -1020,7 +900,7 @@ with st.form("client_opinion_form"):
         else:
             opinion_embed = {
                 "title": "💡 NEW CLIENT OPINION",
-                "color": 3447003,  # Blue Accent
+                "color": 8388640,  # Maroon Accent
                 "fields": [
                     {"name": "Opinion", "value": opinion_text.strip(), "inline": False}
                 ],
@@ -1040,7 +920,7 @@ st.divider()
 st.markdown(
     """
     <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 12px;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FF004B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#800020" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
             <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
             <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
