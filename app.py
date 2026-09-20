@@ -10,10 +10,17 @@ import os
 # Configuration & Global Styling
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Resins-DreamByR",
+    page_title="Resins by R",
     page_icon="❤️",
     layout="wide"
 )
+
+# Safe Retrieval of Discord Webhook URL from Streamlit Cloud Secrets
+if "DISCORD_WEBHOOK_URL" in st.secrets:
+    DISCORD_WEBHOOK_URL = st.secrets["DISCORD_WEBHOOK_URL"]
+else:
+    st.error("DISCORD_WEBHOOK_URL is missing in Streamlit Secrets! Please add it in your app settings.")
+    DISCORD_WEBHOOK_URL = ""
 
 # 1. INTRO SPLASH ANIMATION (Injected directly into window.parent.document)
 components.html("""
@@ -362,9 +369,6 @@ components.html("""
 </script>
 """, height=0, width=0)
 
-# Discord Webhook Credential
-DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1548288796200534066/x0AnH1nWfR4O6dt-OV1u5C4iaGLJ13z0GUe8I6WB7LgohPX2XF1Z9Csrrm1IEfNbbba3"
-
 # Product Inventory
 PRODUCTS = [
     {
@@ -413,6 +417,9 @@ def generate_order_number():
     return f"ORD-{timestamp}-{rand_id}"
 
 def send_discord_message(content=None, embeds=None, files=None):
+    if not DISCORD_WEBHOOK_URL:
+        return False, "Discord Webhook URL is not configured."
+
     payload = {}
     if content:
         payload["content"] = content
@@ -421,8 +428,12 @@ def send_discord_message(content=None, embeds=None, files=None):
 
     try:
         if files:
-            # Send multipart form data if image attachments are included
-            res = requests.post(DISCORD_WEBHOOK_URL, data={"payload_json": requests.compat.json.dumps(payload)}, files=files, timeout=10)
+            res = requests.post(
+                DISCORD_WEBHOOK_URL, 
+                data={"payload_json": requests.compat.json.dumps(payload)}, 
+                files=files, 
+                timeout=10
+            )
         else:
             res = requests.post(DISCORD_WEBHOOK_URL, json=payload, timeout=8)
         
@@ -438,7 +449,7 @@ def send_discord_order(order_data, uploaded_files=None):
     
     embed = {
         "title": "🛒 NEW ORDER RECEIVED",
-        "color": 15212643,  # Deep Pink / Burgundy Accent
+        "color": 15212643,
         "fields": [
             {"name": "Order Number", "value": f"`{order_data['order_no']}`", "inline": True},
             {"name": "Product", "value": order_data['product_name'], "inline": True},
@@ -602,7 +613,7 @@ def render_auto_sliding_carousel(image_paths, height=350, interval_sec=4):
 # -----------------------------------------------------------------------------
 # Main User Interface
 # -----------------------------------------------------------------------------
-st.title("Resins-DreamByR")
+st.title("Resins by R")
 st.write("Browse products and place orders instantly.")
 
 # Sidebar Filters
@@ -645,7 +656,7 @@ if st.session_state.selected_product is not None:
     
     @st.dialog(f"Order: {prod['name']}")
     def show_order_modal():
-        # STEP 3: Order Completed View (Display Order ID for copying/screenshotting)
+        # STEP 3: Order Completed View
         if st.session_state.completed_order_id:
             st.success("🎉 Order Placed Successfully!")
             st.subheader("Your Order ID")
@@ -660,7 +671,7 @@ if st.session_state.selected_product is not None:
                 st.rerun()
             return
 
-        # STEP 2: Order Confirmation Dialogue ("Confirm Order?")
+        # STEP 2: Order Confirmation Dialogue
         if st.session_state.pending_order is not None:
             order = st.session_state.pending_order
             st.subheader("Confirm Order?")
@@ -734,7 +745,7 @@ if st.session_state.selected_product is not None:
                     key=f"shield_pics_{prod['id']}"
                 )
                 if uploaded_photos and len(uploaded_photos) > 3:
-                    st.warning("⚠️ Maximum 3 pictures allowed. Only the first 3 will be processed.")
+                    st.warning("Maximum 3 pictures allowed. Only the first 3 will be processed.")
                     uploaded_photos = uploaded_photos[:3]
 
         unit_price = prod["price"] + picture_extra_cost
@@ -829,7 +840,7 @@ with st.form("client_review_form"):
             
             review_embed = {
                 "title": "⭐ NEW CLIENT REVIEW",
-                "color": 16766720,  # Gold Color
+                "color": 16766720,
                 "fields": [
                     {"name": "Rating", "value": f"{rating_val} / 5 Stars ({stars_visual})", "inline": False},
                     {"name": "Experience", "value": review_text.strip(), "inline": False}
@@ -868,7 +879,7 @@ with st.form("client_opinion_form"):
         else:
             opinion_embed = {
                 "title": "💡 NEW CLIENT OPINION",
-                "color": 3447003,  # Blue Accent
+                "color": 3447003,
                 "fields": [
                     {"name": "Opinion", "value": opinion_text.strip(), "inline": False}
                 ],
