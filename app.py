@@ -373,7 +373,7 @@ components.html("""
 PRODUCTS = [
     {
         "id": 1,
-        "name": "Resin wali angoothi",
+        "name": "Resin Ring",
         "category": "Jewellery",
         "description": "A visualization of beauty and aesthetics, along with the modern requirements of today's jewellery fashion. Colours can be customised.",
         "price": 700,
